@@ -1,0 +1,171 @@
+/* STYLE CSS FINAL */
+/* Importar fonte Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Variáveis CSS */
+:root {
+    --primary-blue: #2E5C8A;
+    --white: #ffffff;
+}
+
+/* Reset do Streamlit */
+.main .block-container {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    max-width: 1200px;
+}
+
+/* Fonte principal */
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
+/* --- SEÇÃO DO CABEÇALHO COM POSICIONAMENTO ABSOLUTO --- */
+
+.hero-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    border: solid 1px #f1f1f1;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: relative; /* Essencial para o posicionamento dos logos */
+    min-height: 250px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+/* Container dos logos que ficará no canto superior direito */
+.logo-group-top-right {
+    position: absolute; /* Posicionamento absoluto em relação ao .hero-section */
+    top: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    gap: 1.5rem; /* Espaço entre os logos */
+    align-items: center;
+}
+
+/* Tamanho dos logos no canto (pequenos) */
+.logo-group-top-right img {
+  max-height: 40px; 
+  width: auto;
+  object-fit: contain;
+}
+
+/* Container do título principal */
+.title-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.title-container h1 {
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: #4A4A4A;
+    margin: 0 0 0.5rem 0;
+}
+
+.enade-title-image {
+    max-width: 400px;
+    height: auto;
+}
+
+/* --- FIM DA SEÇÃO DO CABEÇALHO --- */
+
+
+/* Cards de introdução */
+.intro-card {
+    background: linear-gradient(135deg, #E0F2FE 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #E5E7EB;
+    margin-bottom: 2rem;
+}
+
+.intro-card h2 {
+    color: var(--primary-blue);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 2rem;
+}
+
+.intro-content p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    color: #4e4c4c;
+    text-align: justify;
+}
+
+/* Footer */
+.footer {
+    background: var(--primary-blue);
+    color: white;
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-top: 3rem;
+}
+
+.footer p {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.stMain {
+    background-color: #f8fafc;
+}
+
+.stDownloadButton{
+    display: flex;
+    justify-content: center;
+}
+
+.stDownloadButton button{
+    border-radius: 1rem;
+    padding: .5rem 1.55rem;
+    border: 2px solid rgb(1 74 147 / 52%);
+}
+
+.text-container h1 {
+    font-size: 2.5rem
+}
+
+.text-container p {
+    font-size: 18px;
+    text-align: justify;
+}
+
+.stImage img{
+    max-width: 80%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 1.5rem;
+        min-height: auto;
+        flex-direction: column;
+    }
+    .logo-group-top-right {
+        position: static; /* Remove o posicionamento absoluto em telas pequenas */
+        order: -1;        /* Move os logos para cima do título */
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    .title-container h1 {
+        font-size: 1.5rem;
+    }
+    .enade-title-image {
+        max-width: 200px;
+    }
+}
