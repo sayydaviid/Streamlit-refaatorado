@@ -5,12 +5,12 @@ from utils import atualiza_cursos
 
 def show_page(Enade_2023, UFPA_data, COURSE_CODES, hei_dict):
     st.markdown("""
-        <div class="text-container">
+         <div class="text-container">
             <h1>Conhecimento Específico ENADE 2023</h1>
-            <p>A análise gráfica fornece informações valiosas a respeito do desempenho dos alunos nas temáticas avaliadas na prova...</p>
-            <p>O Gráfico da Razão do Percentual de Acerto exibe o desempenho do curso da UFPA em comparação com a média nacional...</p>
-            <p>O Gráfico de Percentual de Acerto por Tema apresenta a comparação entre o percentual de acertos do curso da UFPA...</p>
-            <p>Na Tabela Ranking é apresentada a instituição com melhor percentual de desempenho, por temática do exame...</p>
+            <p>A análise gráfica fornece informações valiosas a respeito do desempenho dos alunos nas temáticas avaliadas na prova, uma vez que possibilita averiguar se as estratégias pedagógicas aplicadas nas disciplinas ministradas estão produzindo os resultados almejados. São apresentados dois gráficos que exibem a comparação entre o desempenho do curso de graduação da UFPA e o desempenho nacional, calculado a partir do mesmo curso ofertado por todas as IES no país que participam do exame.</p>
+            <p>O Gráfico da Razão do Percentual de Acerto exibe o desempenho do curso da UFPA em comparação com a média nacional, por tema avaliado no ENADE 2023. A interpretação do gráfico da razão é a seguinte: Razão > 1,0: a UFPA apresentou desempenho superior à média nacional; Razão < 1,0: a UFPA obteve desempenho inferior à média nacional; Razão = 1,0: o desempenho da UFPA foi equivalente à média nacional.</p>
+            <p>O Gráfico de Percentual de Acerto por Tema apresenta a comparação entre o percentual de acertos do curso da UFPA e o percentual médio nacional, para cada temática do componente específico da prova.</p>
+            <p>Na Tabela Ranking é apresentada a instituição com melhor percentual de desempenho, por temática do exame, em comparação com o desempenho do curso da UFPA.</p>
         </div>
         """, unsafe_allow_html=True)
 
