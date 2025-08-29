@@ -4,6 +4,7 @@ from zipfile import ZipFile
 from io import BytesIO
 from urllib.request import urlopen
 import config
+import requests # Importação necessária para a verificação dos links
 
 def get_raw_data(url: str, extract_to: str = '.') -> None:
     """Baixa um arquivo ZIP de uma URL e o extrai para um diretório."""
@@ -64,7 +65,7 @@ def load_data():
         if QE_data_2023[col].dtype == 'float64':
             QE_data_2023[col] = QE_data_2023[col].fillna(0).astype(int)
 
-    UFPA_data = Enade_2023[Enade_2023.CO_IES == config.UFPA_CODE]
+    UFPA_data_inicial = Enade_2023[Enade_2023.CO_IES == config.UFPA_CODE]
 
     COURSE_CODES = {}
     questions_sub_file_name = [
@@ -75,7 +76,7 @@ def load_data():
     
     for i, curso_code in enumerate(cod_curso_list):
         if i < len(questions_sub_file_name):
-            curso_info = UFPA_data.loc[UFPA_data['CO_CURSO'] == curso_code]
+            curso_info = UFPA_data_inicial.loc[UFPA_data_inicial['CO_CURSO'] == curso_code]
             if not curso_info.empty:
                 COURSE_CODES[curso_code] = [
                     curso_info['CO_GRUPO'].iloc[0],
@@ -84,11 +85,31 @@ def load_data():
                     curso_info['NOME_MUNIC_CURSO'].iloc[0]
                 ]
 
-    # --- CORREÇÃO FINAL: Lendo o CSV da forma original e correta ---
-    # O arquivo hei.csv tem um cabeçalho, então não devemos usar header=None.
-    # Esta é a forma que estava no seu script original e funciona perfeitamente.
+    # --- NOVO BLOCO DE VERIFICAÇÃO DE ARQUIVOS ---
+    # Itera sobre os cursos e verifica se o arquivo de dados correspondente existe no GitHub.
+    # Se não existir, o curso é removido da lista de opções para evitar erros.
+    with st.spinner("Verificando a disponibilidade dos dados para os cursos..."):
+        cursos_validos = {}
+        for code, details in COURSE_CODES.items():
+            file_name = details[2]
+            url_to_check = f"{config.QUESTIONS_SUBJECTS_BASE_URL}{file_name}_questions_subjects.csv"
+            try:
+                # Usamos uma requisição HEAD que é mais rápida (só busca cabeçalhos)
+                response = requests.head(url_to_check, timeout=5)
+                if response.status_code == 200:
+                    cursos_validos[code] = details
+            except requests.RequestException:
+                # Ignora o curso se houver erro de conexão ao verificar
+                pass
+    
+    COURSE_CODES_VALIDOS = cursos_validos
+    # Filtra o dataframe principal para conter apenas os cursos que foram validados
+    UFPA_data_VALIDA = UFPA_data_inicial[UFPA_data_inicial['CO_CURSO'].isin(COURSE_CODES_VALIDOS.keys())]
+    # --- FIM DO BLOCO DE VERIFICAÇÃO ---
+
+    # O código abaixo permanece o mesmo
     hei_df = pd.read_csv(config.HEI_CODES_URL)
     hei_dict = dict(hei_df.values)
-    # --- FIM DA CORREÇÃO ---
 
-    return Enade_2023, QE_data_2023, UFPA_data, COURSE_CODES, hei_dict
+    # Retorna os dados já filtrados e validados
+    return Enade_2023, QE_data_2023, UFPA_data_VALIDA, COURSE_CODES_VALIDOS, hei_dict
