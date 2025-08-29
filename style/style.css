@@ -20,6 +20,17 @@ html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
+/* --- INÍCIO: CORREÇÃO DEFINITIVA PARA O TÍTULO DA PÁGINA (st.title) --- */
+/* Seletor específico para o H1 gerado pelo st.title */
+[data-testid="stHeading"] h1 {
+    color: #31333F !important; /* Cor de texto escura (quase preto) com !important */
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Espaço entre o ícone e o texto */
+}
+/* --- FIM DA CORREÇÃO --- */
+
+
 /* --- SEÇÃO DO CABEÇALHO COM POSICIONAMENTO ABSOLUTO --- */
 
 .hero-section {
@@ -132,15 +143,6 @@ html, body, [class*="css"] {
     border: 2px solid rgb(1 74 147 / 52%);
 }
 
-.text-container h1 {
-    font-size: 2.5rem
-}
-
-.text-container p {
-    font-size: 18px;
-    text-align: justify;
-}
-
 .stImage img{
     max-width: 80%;
     display: block;
@@ -157,6 +159,27 @@ html, body, [class*="css"] {
     margin-bottom: 2rem;
     border: 1px solid #E5E7EB;
 }
+
+
+/* --- INÍCIO DA CORREÇÃO PARA A CAIXA DE AVISO (st.warning) --- */
+[data-testid="stAlert"] {
+    background-color: #FFFBEB; /* Fundo amarelo claro */
+    color: #5d4a0a; /* Cor do texto escura (marrom/amarelado) */
+    border: 1px solid #FFEEBA;
+    border-radius: 12px; /* Bordas arredondadas */
+    padding: 1rem;
+}
+
+/* Força a cor do texto para todos os elementos dentro do aviso */
+[data-testid="stAlert"] * {
+    color: #5d4a0a !important; 
+}
+
+/* Remove fundos escuros indesejados de itens de lista ou texto em negrito */
+[data-testid="stAlert"] li, [data-testid="stAlert"] p, [data-testid="stAlert"] strong {
+     background-color: transparent !important;
+}
+/* --- FIM DA CORREÇÃO --- */
 
 .text-container h1 {
     font-size: 2.2rem;
