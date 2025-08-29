@@ -148,6 +148,81 @@ html, body, [class*="css"] {
     margin-right: auto;
 }
 
+/* Estilos específicos para a página de Conhecimento Específico */
+.text-container {
+    background: #FFFFFF; /* Garante um fundo branco para o bloco de texto */
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    border: 1px solid #E5E7EB;
+}
+
+.text-container h1 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: #2E5C8A; /* Título principal em azul escuro */
+    margin-bottom: 1.5rem;
+}
+
+.text-container p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    color: #4e4c4c; /* Texto do parágrafo em cinza escuro para legibilidade */
+    text-align: justify;
+}
+/* Estilo para o texto das abas NÃO selecionadas */
+[data-testid="stTab"] p {
+    color: #4A4A4A; /* Define a cor do texto como cinza escuro (quase preto) */
+}
+
+/* Estilo para a aba ATIVA/SELECIONADA */
+[data-testid="stTab"][aria-selected="true"] {
+    /* Cria a linha vermelha inferior que indica a seleção */
+    border-bottom: 2px solid #FF4B4B; 
+}
+
+/* Estilo para o texto da aba ATIVA/SELECIONADA */
+[data-testid="stTab"][aria-selected="true"] p {
+    color: #FF4B4B; /* Define a cor do texto como vermelho */
+}
+
+/* Estilo para o texto (label) do checkbox */
+[data-testid="stCheckbox"] label {
+    color: #4A4A4A !important; /* Força o texto do checkbox a ser cinza escuro */
+}
+
+/* Define a animação de fade in */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px); /* Começa um pouco abaixo */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Termina na posição normal */
+    }
+}
+
+/* Aplica a animação ao container do conteúdo da aba */
+[data-testid="stTabContent"] {
+    animation: fadeIn 0.5s ease-out; /* Duração e tipo da animação */
+}
+
+/* Ajustes de responsividade para o text-container, se necessário */
+@media (max-width: 768px) {
+    .text-container {
+        padding: 1.5rem;
+    }
+    .text-container h1 {
+        font-size: 1.8rem;
+    }
+    .text-container p {
+        font-size: 1rem;
+    }
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
     .hero-section {

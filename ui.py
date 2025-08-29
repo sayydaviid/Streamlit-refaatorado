@@ -27,15 +27,33 @@ def create_sidebar() -> str:
         st.markdown("### Menu")
         page = option_menu(
             menu_title=None,
+            
+            # 1. Mantemos os emojis que você quer nos nomes das opções
             options=["🏠 Página Inicial", "📊 Conhecimento Específico", "📝 Questionário do Estudante", "📥 Baixar Relatório"],
-            icons=["house-door-fill", "bar-chart-line-fill", "pencil-square", "download"],
+            
+            # 2. O PARÂMETRO 'icons' FOI COMPLETAMENTE REMOVIDO
+            
             default_index=0,
             styles={
                 "container": {"padding": "0!important", "background-color": "transparent"},
-                "nav-link": {"font-size": "17px", "color": "#4A4A4A", "padding": "8px 12px", "border-radius": "12px", "margin": "4px 0"},
-                "icon": {"font-size": "18px", "margin-right": "8px"},
-                "nav-link-selected": {"background-color": "rgb(209 223 255)", "font-weight": "700", "color": "#212121"},
-            },
+                # A chave "icon" foi removida para garantir que não haja conflito
+                "nav-link": {
+                    "font-size": "17px",
+                    "color": "#FAFAFA",
+                    "padding": "10px",
+                    "border-radius": "10px",
+                    "margin": "5px 0",
+                    "transition": "0.2s"
+                },
+                "nav-link:hover": {
+                    "background-color": "rgba(255, 255, 255, 0.1)"
+                },
+                "nav-link-selected": {
+                    "background-color": "#FFFFFF",
+                    "font-weight": "600",
+                    "color": "#212121"
+                },
+            }
         )
     return page
 

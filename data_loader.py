@@ -1,5 +1,3 @@
-# data_loader.py
-
 import pandas as pd
 import streamlit as st
 from zipfile import ZipFile
@@ -31,7 +29,6 @@ def reduce_data(df: pd.DataFrame) -> pd.DataFrame:
         "DS_VT_ACE_OFG", "DS_VT_ESC_OCE", "NT_CE", "NT_GER", "NT_OBJ_CE",
         "TP_PRES", "TP_PR_GER"
     ]
-    # Retorna apenas colunas que existem para evitar KeyErrors
     return df[[col for col in columns if col in df.columns]]
 
 @st.cache_data
@@ -76,21 +73,22 @@ def load_data():
         'AGR', 'BIO', 'ENG_CIV', 'ENG_ELE', 'ENG_QUI', 'MED_VET', 'MED', 'ODO', 'FIS'
     ]
     
-    for curso, file_name in zip(cod_curso_list, questions_sub_file_name):
-        curso_info = UFPA_data.loc[UFPA_data['CO_CURSO'] == curso]
-        if not curso_info.empty:
-            COURSE_CODES[curso] = [
-                curso_info['CO_GRUPO'].iloc[0],
-                curso_info['NOME_CURSO'].iloc[0],
-                file_name,
-                curso_info['NOME_MUNIC_CURSO'].iloc[0]
-            ]
-    
-    # --- LÓGICA ORIGINAL RESTAURADA ---
-    # Este bloco é idêntico ao seu script original.
-    # Ele lê o CSV sem cabeçalho e converte os valores diretamente para um dicionário.
-    hei_df = pd.read_csv(config.HEI_CODES_URL, sep=",", header=None)
+    for i, curso_code in enumerate(cod_curso_list):
+        if i < len(questions_sub_file_name):
+            curso_info = UFPA_data.loc[UFPA_data['CO_CURSO'] == curso_code]
+            if not curso_info.empty:
+                COURSE_CODES[curso_code] = [
+                    curso_info['CO_GRUPO'].iloc[0],
+                    curso_info['NOME_CURSO'].iloc[0],
+                    questions_sub_file_name[i],
+                    curso_info['NOME_MUNIC_CURSO'].iloc[0]
+                ]
+
+    # --- CORREÇÃO FINAL: Lendo o CSV da forma original e correta ---
+    # O arquivo hei.csv tem um cabeçalho, então não devemos usar header=None.
+    # Esta é a forma que estava no seu script original e funciona perfeitamente.
+    hei_df = pd.read_csv(config.HEI_CODES_URL)
     hei_dict = dict(hei_df.values)
-    # --- FIM DA LÓGICA ORIGINAL ---
+    # --- FIM DA CORREÇÃO ---
 
     return Enade_2023, QE_data_2023, UFPA_data, COURSE_CODES, hei_dict
