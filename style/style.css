@@ -6,6 +6,7 @@
 :root {
     --primary-blue: #2E5C8A;
     --white: #ffffff;
+    --text-dark: #111827; /* preto/quase preto padrão */
 }
 
 /* Reset do Streamlit */
@@ -15,24 +16,34 @@
     max-width: 1200px;
 }
 
-/* Fonte principal */
+/* Fonte + COR PADRÃO DO TEXTO (preta) */
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
+    color: var(--text-dark) !important; /* força texto escuro global */
 }
 
-/* --- INÍCIO: CORREÇÃO DEFINITIVA PARA O TÍTULO DA PÁGINA (st.title) --- */
-/* Seletor específico para o H1 gerado pelo st.title */
+/* Texto geral escuro (NÃO força markdown inteiro) */
+.stApp, .main, .stText, label {
+    color: var(--text-dark) !important;
+}
+
+/* >>> Só o título "Menu" da sidebar em branco <<<  */
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"]:first-of-type h3 {
+    color: #ffffff !important;
+}
+/* Se o "Menu" não for o primeiro markdown na sua sidebar, ajuste o índice:
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"]:nth-of-type(2) h3 { color:#ffffff !important; }
+*/
+
+/* --- TÍTULO DA PÁGINA (st.title) --- */
 [data-testid="stHeading"] h1 {
-    color: #31333F !important; /* Cor de texto escura (quase preto) com !important */
+    color: #31333F !important;
     display: flex;
     align-items: center;
-    gap: 0.75rem; /* Espaço entre o ícone e o texto */
+    gap: 0.75rem;
 }
-/* --- FIM DA CORREÇÃO --- */
 
-
-/* --- SEÇÃO DO CABEÇALHO COM POSICIONAMENTO ABSOLUTO --- */
-
+/* --- SEÇÃO DO CABEÇALHO (se usada) --- */
 .hero-section {
     background: white;
     padding: 2rem;
@@ -40,51 +51,37 @@ html, body, [class*="css"] {
     border: solid 1px #f1f1f1;
     margin-bottom: 2rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    position: relative; /* Essencial para o posicionamento dos logos */
+    position: relative;
     min-height: 250px;
     display: flex;
     justify-content: center;
     align-items: flex-end;
 }
-
-/* Container dos logos que ficará no canto superior direito */
 .logo-group-top-right {
-    position: absolute; /* Posicionamento absoluto em relação ao .hero-section */
+    position: absolute;
     top: 1.5rem;
     right: 1.5rem;
     display: flex;
-    gap: 1.5rem; /* Espaço entre os logos */
+    gap: 1.5rem;
     align-items: center;
 }
-
-/* Tamanho dos logos no canto (pequenos) */
 .logo-group-top-right img {
-  max-height: 40px; 
+  max-height: 40px;
   width: auto;
   object-fit: contain;
 }
-
-/* Container do título principal */
 .title-container {
     display: flex;
     justify-content: center;
     align-items: center;
 }
-
 .title-container h1 {
     font-size: 1.8rem;
     font-weight: 400;
     color: #4A4A4A;
     margin: 0 0 0.5rem 0;
 }
-
-.enade-title-image {
-    max-width: 400px;
-    height: auto;
-}
-
-/* --- FIM DA SEÇÃO DO CABEÇALHO --- */
-
+.enade-title-image { max-width: 400px; height: auto; }
 
 /* Cards de introdução */
 .intro-card {
@@ -95,7 +92,6 @@ html, body, [class*="css"] {
     border: 1px solid #E5E7EB;
     margin-bottom: 2rem;
 }
-
 .intro-card h2 {
     color: var(--primary-blue);
     font-weight: 600;
@@ -103,7 +99,6 @@ html, body, [class*="css"] {
     text-align: center;
     font-size: 2rem;
 }
-
 .intro-content p {
     font-size: 1.1rem;
     line-height: 1.7;
@@ -121,38 +116,21 @@ html, body, [class*="css"] {
     border-radius: 12px;
     margin-top: 3rem;
 }
+.footer p { font-size: 0.9rem; opacity: 0.9; margin: 0; }
 
-.footer p {
-    font-size: 0.9rem;
-    opacity: 0.9;
-    margin: 0;
-}
+.stMain { background-color: #f8fafc; }
 
-.stMain {
-    background-color: #f8fafc;
-}
-
-.stDownloadButton{
-    display: flex;
-    justify-content: center;
-}
-
+.stDownloadButton{ display: flex; justify-content: center; }
 .stDownloadButton button{
     border-radius: 1rem;
     padding: .5rem 1.55rem;
     border: 2px solid rgb(1 74 147 / 52%);
 }
+.stImage img{ max-width: 80%; display: block; margin-left: auto; margin-right: auto; }
 
-.stImage img{
-    max-width: 80%;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* Estilos específicos para a página de Conhecimento Específico */
+/* Conteúdo textual padrão */
 .text-container {
-    background: #FFFFFF; /* Garante um fundo branco para o bloco de texto */
+    background: #FFFFFF;
     padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -160,110 +138,150 @@ html, body, [class*="css"] {
     border: 1px solid #E5E7EB;
 }
 
-
-/* --- INÍCIO DA CORREÇÃO PARA A CAIXA DE AVISO (st.warning) --- */
+/* ALERTA (st.warning) */
 [data-testid="stAlert"] {
-    background-color: #FFFBEB; /* Fundo amarelo claro */
-    color: #5d4a0a; /* Cor do texto escura (marrom/amarelado) */
+    background-color: #FFFBEB;
+    color: #5d4a0a;
     border: 1px solid #FFEEBA;
-    border-radius: 12px; /* Bordas arredondadas */
+    border-radius: 12px;
     padding: 1rem;
 }
-
-/* Força a cor do texto para todos os elementos dentro do aviso */
-[data-testid="stAlert"] * {
-    color: #5d4a0a !important; 
-}
-
-/* Remove fundos escuros indesejados de itens de lista ou texto em negrito */
+[data-testid="stAlert"] * { color: #5d4a0a !important; }
 [data-testid="stAlert"] li, [data-testid="stAlert"] p, [data-testid="stAlert"] strong {
      background-color: transparent !important;
 }
-/* --- FIM DA CORREÇÃO --- */
 
+/* Textos */
 .text-container h1 {
     font-size: 2.2rem;
     font-weight: 600;
-    color: #2E5C8A; /* Título principal em azul escuro */
+    color: #2E5C8A;
     margin-bottom: 1.5rem;
 }
-
 .text-container p {
     font-size: 1.1rem;
     line-height: 1.7;
     margin-bottom: 1.5rem;
-    color: #4e4c4c; /* Texto do parágrafo em cinza escuro para legibilidade */
+    color: #4e4c4c;
     text-align: justify;
 }
-/* Estilo para o texto das abas NÃO selecionadas */
-[data-testid="stTab"] p {
-    color: #4A4A4A; /* Define a cor do texto como cinza escuro (quase preto) */
-}
 
-/* Estilo para a aba ATIVA/SELECIONADA */
-[data-testid="stTab"][aria-selected="true"] {
-    /* Cria a linha vermelha inferior que indica a seleção */
-    border-bottom: 2px solid #FF4B4B; 
-}
+/* TABS */
+[data-testid="stTab"] p { color: #4A4A4A; }
+[data-testid="stTab"][aria-selected="true"] { border-bottom: 2px solid #FF4B4B; }
+[data-testid="stTab"][aria-selected="true"] p { color: #FF4B4B; }
 
-/* Estilo para o texto da aba ATIVA/SELECIONADA */
-[data-testid="stTab"][aria-selected="true"] p {
-    color: #FF4B4B; /* Define a cor do texto como vermelho */
-}
+/* Checkbox label */
+[data-testid="stCheckbox"] label { color: #4A4A4A !important; }
 
-/* Estilo para o texto (label) do checkbox */
-[data-testid="stCheckbox"] label {
-    color: #4A4A4A !important; /* Força o texto do checkbox a ser cinza escuro */
-}
-
-/* Define a animação de fade in */
+/* Fade-in tab content */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px); /* Começa um pouco abaixo */
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0); /* Termina na posição normal */
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
+[data-testid="stTabContent"] { animation: fadeIn 0.5s ease-out; }
 
-/* Aplica a animação ao container do conteúdo da aba */
-[data-testid="stTabContent"] {
-    animation: fadeIn 0.5s ease-out; /* Duração e tipo da animação */
-}
-
-/* Ajustes de responsividade para o text-container, se necessário */
+/* Responsividade text-container */
 @media (max-width: 768px) {
-    .text-container {
-        padding: 1.5rem;
-    }
-    .text-container h1 {
-        font-size: 1.8rem;
-    }
-    .text-container p {
-        font-size: 1rem;
-    }
+    .text-container { padding: 1.5rem; }
+    .text-container h1 { font-size: 1.8rem; }
+    .text-container p { font-size: 1rem; }
 }
 
-/* Responsividade */
+/* Responsividade hero */
 @media (max-width: 768px) {
-    .hero-section {
-        padding: 1.5rem;
-        min-height: auto;
-        flex-direction: column;
-    }
-    .logo-group-top-right {
-        position: static; /* Remove o posicionamento absoluto em telas pequenas */
-        order: -1;        /* Move os logos para cima do título */
-        width: 100%;
-        justify-content: center;
-        margin-bottom: 2rem;
-    }
-    .title-container h1 {
-        font-size: 1.5rem;
-    }
-    .enade-title-image {
-        max-width: 200px;
-    }
+    .hero-section { padding: 1.5rem; min-height: auto; flex-direction: column; }
+    .logo-group-top-right { position: static; order: -1; width: 100%; justify-content: center; margin-bottom: 2rem; }
+    .title-container h1 { font-size: 1.5rem; }
+    .enade-title-image { max-width: 200px; }
+}
+
+/* ======================== */
+/*  SELECTS (BaseWeb)      */
+/* ======================== */
+[data-baseweb="select"] [aria-label="Clear value"] { display: none !important; } /* Some o 'X' */
+[data-baseweb="select"] [role="combobox"],
+[data-baseweb="select"] [role="combobox"] *,
+[data-baseweb="select"] input { color: var(--text-dark) !important; }
+[data-baseweb="select"] input::placeholder { color: #6b7280 !important; }
+[data-baseweb="menu"] *, [role="listbox"] * { color: var(--text-dark) !important; }
+
+/* ========================================================= */
+/*          PÁGINA: Gerar & Baixar Relatório (extras)        */
+/* ========================================================= */
+
+/* Bloqueia rolagem horizontal global */
+html, body, .stApp, [data-testid="stAppViewContainer"], .main, .block-container {
+    overflow-x: clip !important;
+    max-width: 100% !important;
+}
+
+/* Wrapper do viewer: proíbe overflow-x dentro */
+.no-x-scroll, .no-x-scroll * { max-width: 100% !important; }
+.no-x-scroll { overflow-x: hidden !important; }
+.no-x-scroll [style*="overflow: auto"],
+.no-x-scroll [style*="overflow:auto"],
+.no-x-scroll [style*="overflow: scroll"],
+.no-x-scroll [style*="overflow:scroll"] { overflow-x: hidden !important; }
+/* pdf.js comuns */
+.no-x-scroll #outerContainer,
+.no-x-scroll #mainContainer,
+.no-x-scroll #viewerContainer,
+.no-x-scroll .pdf-viewer,
+.no-x-scroll .pdfViewer { overflow-x: hidden !important; }
+
+/* Ajuda acima dos selects */
+.helper-text { margin: .5rem 0 .75rem 0; color:#374151; }
+
+/* Loader (bolinha girando) */
+.loader-wrap{
+    display:flex; align-items:center; gap:.75rem;
+    padding:.6rem .9rem; border:1px dashed #e5e7eb;
+    border-radius:10px; background:#f9fafb; color:#111827;
+    margin:.25rem 0 .25rem 0;
+}
+.lds-ring{ display:inline-block; position:relative; width:22px; height:22px; }
+.lds-ring div{
+    box-sizing:border-box; display:block; position:absolute;
+    width:22px; height:22px; border:3px solid #2E5C8A; border-radius:50%;
+    animation:lds-ring 1.2s linear infinite;
+    border-color:#2E5C8A transparent transparent transparent;
+}
+.lds-ring div:nth-child(1){ animation-delay:-0.45s; }
+.lds-ring div:nth-child(2){ animation-delay:-0.3s; }
+.lds-ring div:nth-child(3){ animation-delay:-0.15s; }
+@keyframes lds-ring{ 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+
+/* Subtítulo da prévia */
+.h4-tight { margin: .25rem 0 .5rem 0; font-size: 1.15rem; font-weight: 700; color:#1f2937; }
+
+/* Botão de download pequeno ao lado do título (+ texto SEMPRE branco) */
+/* =============== Botão "Baixar PDF" compacto ao lado do título =============== */
+/* Botão HTML de download (texto sempre branco) */
+.inline-dl .dl-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  background: linear-gradient(135deg, #111827, #111827);
+  padding:.48rem .9rem;
+  border-radius:10px;
+  font-size:.875rem;
+  font-weight:700;
+  letter-spacing:.2px;
+  box-shadow:0 6px 16px rgba(46,92,138,.25);
+  text-decoration:none !important;
+  color:#ffffff !important; /* texto branco */
+  border:0;
+}
+.inline-dl .dl-btn:hover{
+  transform: translateY(-1px);
+  box-shadow:0 10px 22px rgba(46,92,138,.35);
+}
+.inline-dl .dl-btn:active{
+  transform:none;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);
+}
+.inline-dl .dl-btn:visited,
+.inline-dl .dl-btn *{
+  color:#ffffff !important; /* garante branco sempre */
 }

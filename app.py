@@ -37,7 +37,7 @@ def main():
         questionario_do_estudante.show_page(QE_data_2023, UFPA_data, COURSE_CODES)
 
     elif "Baixar Relatório" in page:
-        relatorio.show_page()
+        relatorio.show_page(Enade_2023, QE_data_2023, UFPA_data, COURSE_CODES, hei_dict)    
 
     # --- Rodapé ---
     display_footer()
