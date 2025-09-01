@@ -17,7 +17,7 @@ from analysis import (
 # =========================================================
 def add_dataframe_to_pdf(pdf: FPDF, df: pd.DataFrame) -> None:
     """
-    Desenha um DataFrame no PDF com linhas alinhadas, usando medição real
+    Desenha um DataFrame no PDF com a tabela centralizada na página, usando medição real
     de quebra de texto (split_only=True) para Tema e IES, e bordas contínuas.
     """
     # Larguras (somam 169mm -> cabe no miolo da página A4 com margens padrão)
@@ -34,7 +34,16 @@ def add_dataframe_to_pdf(pdf: FPDF, df: pd.DataFrame) -> None:
     header_h = pdf.font_size * 2.0
     line_h = pdf.font_size * 1.6  # altura de cada sublinha dentro de uma célula multilinha
 
-    table_x = pdf.get_x()  # para voltar ao início da tabela a cada linha
+    # --- ALTERAÇÃO PARA CENTRALIZAR ---
+    # 1. Calcula a largura total da tabela somando as larguras das colunas.
+    total_width = sum(col_widths.values())
+    
+    # 2. Calcula a posição X inicial para a tabela ficar centralizada na página.
+    table_x = (pdf.w - total_width) / 2
+
+    # 3. Move o cursor para essa posição inicial ANTES de desenhar o cabeçalho.
+    pdf.set_x(table_x)
+    # --- FIM DA ALTERAÇÃO ---
 
     # Cabeçalho
     for col_name in df.columns:
@@ -45,6 +54,7 @@ def add_dataframe_to_pdf(pdf: FPDF, df: pd.DataFrame) -> None:
     pdf.set_font("Times", "", 7)
 
     for _, row in df.iterrows():
+        # A variável 'x' agora começa na posição centralizada calculada
         x = table_x
         y = pdf.get_y()
 
@@ -73,6 +83,8 @@ def add_dataframe_to_pdf(pdf: FPDF, df: pd.DataFrame) -> None:
         # Evita cortar a linha na quebra de página
         if y + row_h > (pdf.h - pdf.b_margin):
             pdf.add_page()
+            # Garante que a posição X seja resetada para o centro na nova página
+            pdf.set_x(table_x)
             x = table_x
             y = pdf.get_y()
 
@@ -83,8 +95,8 @@ def add_dataframe_to_pdf(pdf: FPDF, df: pd.DataFrame) -> None:
         x += col_widths["Tema"]
 
         # --- IES (mesma lógica)
+        pdf.set_xy(x, y) # Define a posição para a próxima célula
         pdf.rect(x, y, col_widths["IES com o melhor desempenho"], row_h)
-        pdf.set_xy(x, y)
         pdf.multi_cell(
             col_widths["IES com o melhor desempenho"],
             line_h,
@@ -95,23 +107,23 @@ def add_dataframe_to_pdf(pdf: FPDF, df: pd.DataFrame) -> None:
         x += col_widths["IES com o melhor desempenho"]
 
         # --- Nº participantes
+        pdf.set_xy(x, y) # Define a posição para a próxima célula
         pdf.rect(x, y, col_widths["Nº de participantes"], row_h)
-        pdf.set_xy(x, y)
         pdf.cell(col_widths["Nº de participantes"], row_h, n_txt, border=0, align="C")
         x += col_widths["Nº de participantes"]
 
         # --- Melhor (%)
+        pdf.set_xy(x, y) # Define a posição para a próxima célula
         pdf.rect(x, y, col_widths["Melhor (%)"], row_h)
-        pdf.set_xy(x, y)
         pdf.cell(col_widths["Melhor (%)"], row_h, mel_txt, border=0, align="C")
         x += col_widths["Melhor (%)"]
 
         # --- UFPA (%)
+        pdf.set_xy(x, y) # Define a posição para a próxima célula
         pdf.rect(x, y, col_widths["UFPA (%)"], row_h)
-        pdf.set_xy(x, y)
         pdf.cell(col_widths["UFPA (%)"], row_h, ufpa_txt, border=0, align="C")
 
-        # Avança para a próxima linha
+        # Avança o cursor para a próxima linha, alinhado ao início da tabela
         pdf.set_xy(table_x, y + row_h)
 
 
