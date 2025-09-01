@@ -73,7 +73,7 @@ def display_home_page():
     hero_html = f"""
     <div class="hero-section">
         <div class="logo-group-top-right">
-            <img src="data:image/jpeg;base64,{cpa_logo_b64}" alt="Logo CPA">
+            <img id="cpa-logo" src="data:image/jpeg;base64,{cpa_logo_b64}" alt="Logo CPA">
             <img src="data:image/jpeg;base64,{proplan_logo_b64}" alt="Logo PROPLAN">
             <img src="data:image/png;base64,{diavi_logo_b64}" alt="Logo DIAVI">
         </div>

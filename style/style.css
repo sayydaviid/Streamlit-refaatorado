@@ -166,6 +166,10 @@ html, body, [class*="css"] {
     text-align: justify;
 }
 
+.logo-group-top-right img#cpa-logo {
+  max-height: 60px; /* <-- Ajuste este valor como desejar (o original era 40px) */
+}
+
 /* TABS */
 [data-testid="stTab"] p { color: #4A4A4A; }
 [data-testid="stTab"][aria-selected="true"] { border-bottom: 2px solid #FF4B4B; }
