@@ -176,43 +176,13 @@ def generate_full_report(
         ]
 
         odp_questions = [
-            "QE_I27",
-            "QE_I28",
-            "QE_I29",
-            "QE_I30",
-            "QE_I31",
-            "QE_I32",
-            "QE_I33",
-            "QE_I34",
-            "QE_I35",
-            "QE_I36",
-            "QE_I37",
-            "QE_I38",
-            "QE_I39",
-            "QE_I40",
-            "QE_I42",
-            "QE_I47",
-            "QE_I48",
-            "QE_I49",
-            "QE_I51",
-            "QE_I55",
-            "QE_I57",
-            "QE_I66",
+            "QE_I27", "QE_I28", "QE_I29", "QE_I30", "QE_I31", "QE_I32", "QE_I33", "QE_I34", "QE_I35",
+            "QE_I36", "QE_I37", "QE_I38", "QE_I39", "QE_I40", "QE_I42", "QE_I47", "QE_I48", "QE_I49",
+            "QE_I51", "QE_I55", "QE_I57", "QE_I66",
         ]
         infra_questions = [
-            "QE_I50",
-            "QE_I54",
-            "QE_I56",
-            "QE_I58",
-            "QE_I59",
-            "QE_I60",
-            "QE_I61",
-            "QE_I62",
-            "QE_I63",
-            "QE_I64",
-            "QE_I65",
-            "QE_I67",
-            "QE_I68",
+            "QE_I50", "QE_I54", "QE_I56", "QE_I58", "QE_I59", "QE_I60", "QE_I61", "QE_I62", "QE_I63",
+            "QE_I64", "QE_I65", "QE_I67", "QE_I68",
         ]
         oaf_questions = ["QE_I43", "QE_I44", "QE_I45", "QE_I46", "QE_I52", "QE_I53"]
 
@@ -259,18 +229,28 @@ def generate_full_report(
 
         add_text_page(TITLE_INTRO, INTRO_PARAGRAPHS)
         add_text_page(TITLE_CE, CE_PARAGRAPHS)
-
-        # Gráficos CE
+        
+        # Gráfico 1 (Razão)
         pdf.add_page()
         pdf.ln(10)
+        pdf.set_font("Times", "B", 12)
+        pdf.multi_cell(0, 6, f"Razão do Percentual de Acerto UFPA vs. Brasil\n{curso_nome} em {municipio_nome} por Tema no ENADE 2023", align="C")
+        pdf.ln(3)
         pdf.image(image_paths["razao_chart"], x=20, w=170)
         pdf.set_font("Times", size=11)
         pdf.cell(0, 8, "Figura 1: Gráfico Razão do Percentual", ln=True, align="C")
-        pdf.ln(5)
-        pdf.image(image_paths["percent_chart"], x=20, w=170)
-        pdf.cell(0, 8, "Figura 2: Gráfico Percentual do Acerto", ln=True, align="C")
 
-        # Tabela Ranking (com função corrigida)
+        # Gráfico 2 (Percentual) - Em uma nova página para garantir a formatação
+        pdf.add_page()
+        pdf.ln(10)
+        pdf.set_font("Times", "B", 12)
+        pdf.multi_cell(0, 6, f"Percentual de Acerto UFPA vs. Brasil\n{curso_nome} em {municipio_nome} por Tema no ENADE 2023", align="C")
+        pdf.ln(3)
+        pdf.image(image_paths["percent_chart"], x=20, w=170)
+        pdf.set_font("Times", size=11)
+        pdf.cell(0, 8, "Figura 2: Gráfico Percentual do Acerto", ln=True, align="C")
+        
+        # Tabela Ranking
         pdf.add_page()
         pdf.ln(10)
         pdf.set_font("Times", "B", 14)
@@ -284,43 +264,56 @@ def generate_full_report(
         # Página de introdução do QE
         add_text_page(TITLE_QE, QE_PARAGRAPHS)
 
-        # Função para páginas de gráficos do QE
-        def add_qe_charts_page(title, avg_key, count_key, caption_avg, caption_count):
+        # --- CORREÇÃO APLICADA AQUI ---
+        # Função para páginas de gráficos do QE (versão mais compacta)
+        def add_qe_charts_page(title, avg_key, count_key, caption_avg, caption_count, curso_nome, municipio_nome):
             pdf.add_page()
-            pdf.set_font("Times", "B", 16)
+            # Reduzido: Fonte 14, altura 8
+            pdf.set_font("Times", "B", 14) 
             pdf.set_text_color(*PRIMARY_BLUE)
-            pdf.cell(0, 10, title, ln=True)
+            pdf.cell(0, 8, title, ln=True, align="C")
+            # Reduzido: Espaçamento
             pdf.ln(3)
+
+            # --- Título e Gráfico de Médias ---
+            pdf.set_font("Times", "B", 12)
+            pdf.set_text_color(*BLACK)
+            pdf.multi_cell(0, 5, f"Média das respostas em {curso_nome} - {municipio_nome}", align="C")
+            # Reduzido: Espaçamento
+            pdf.ln(2)
             pdf.image(image_paths[avg_key], x=30, w=150)
             pdf.set_font("Times", size=11)
-            pdf.set_text_color(*BLACK)
             pdf.cell(0, 8, caption_avg, ln=True, align="C")
-            pdf.ln(8)
+            # Reduzido: Espaçamento entre gráficos
+            pdf.ln(5)
+
+            # --- Título e Gráfico de Contagem ---
+            pdf.set_font("Times", "B", 12)
+            pdf.set_text_color(*BLACK)
+            pdf.multi_cell(0, 5, f"Contagem das respostas em {curso_nome} - {municipio_nome}", align="C")
+            # Reduzido: Espaçamento
+            pdf.ln(2)
             pdf.image(image_paths[count_key], x=30, w=150)
             pdf.set_font("Times", size=11)
-            pdf.set_text_color(*BLACK)
             pdf.cell(0, 8, caption_count, ln=True, align="C")
 
         add_qe_charts_page(
-            "Organização Didático Pedagógica",
-            "odp_img_av",
-            "odp_img_co",
+            "Organização Didático Pedagógica", "odp_img_av", "odp_img_co",
             "Figura 4: Gráfico de Médias Organização Didático-Pedagógica",
             "Figura 5: Gráfico de Linhas Organização Didático-Pedagógica",
+            curso_nome, municipio_nome
         )
         add_qe_charts_page(
-            "Infraestrutura e Instalações Físicas",
-            "infra_img_av",
-            "infra_img_co",
+            "Infraestrutura e Instalações Físicas", "infra_img_av", "infra_img_co",
             "Figura 6: Gráfico de Médias Infraestrutura",
             "Figura 7: Gráfico de Linhas Infraestrutura",
+            curso_nome, municipio_nome
         )
         add_qe_charts_page(
-            "Oportunidades de Ampliação da Formação",
-            "oaf_img_av",
-            "oaf_img_co",
+            "Oportunidades de Ampliação da Formação", "oaf_img_av", "oaf_img_co",
             "Figura 8: Gráfico de Médias Ampliação da Formação",
             "Figura 9: Gráfico de Linhas Ampliação da Formação",
+            curso_nome, municipio_nome
         )
 
         # Seção Anexo
@@ -330,18 +323,22 @@ def generate_full_report(
         pdf.set_text_color(*PRIMARY_BLUE)
         pdf.cell(0, 10, "Anexo Questionário do Estudante", ln=True, align="L")
 
-        # --- 3) Junta capa + miolo + anexo em um PDF final
+        # --- 3) Junta capa + miolo + anexo em um PDF final ---
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_pdf:
             generated_pdf_path = tmp_pdf.name
             pdf.output(generated_pdf_path)
 
         writer = PdfWriter()
-        with open(CAPA_RELATORIO_PATH, "rb") as f:
-            writer.append(f)
+        if os.path.exists(CAPA_RELATORIO_PATH):
+            with open(CAPA_RELATORIO_PATH, "rb") as f:
+                writer.append(f)
+        
         with open(generated_pdf_path, "rb") as f:
             writer.append(f)
-        with open(ANEXO_QE_PATH, "rb") as f:
-            writer.append(f)
+
+        if os.path.exists(ANEXO_QE_PATH):
+            with open(ANEXO_QE_PATH, "rb") as f:
+                writer.append(f)
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as final_pdf_file:
             final_path = final_pdf_file.name
@@ -358,17 +355,11 @@ def generate_full_report(
         # Limpeza de arquivos temporários/imagens
         for path in image_paths.values():
             if path and os.path.exists(path):
-                try:
-                    os.remove(path)
-                except Exception:
-                    pass
+                try: os.remove(path)
+                except Exception: pass
         if generated_pdf_path and os.path.exists(generated_pdf_path):
-            try:
-                os.remove(generated_pdf_path)
-            except Exception:
-                pass
+            try: os.remove(generated_pdf_path)
+            except Exception: pass
         if final_path and os.path.exists(final_path):
-            try:
-                os.remove(final_path)
-            except Exception:
-                pass
+            try: os.remove(final_path)
+            except Exception: pass

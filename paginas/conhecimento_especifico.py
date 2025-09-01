@@ -4,6 +4,60 @@ from analysis import plot_performance_graph, show_best_hei_ranking_table
 from utils import atualiza_cursos
 
 def show_page(Enade_2023, UFPA_data, COURSE_CODES, hei_dict):
+    # --- CSS PARA A ANIMAÇÃO DE CARREGAMENTO ---
+    st.markdown("""
+        <style>
+        .loader-wrap {
+            display: flex;
+            width: 100%;
+            height: 200px; /* Altura para centralizar no espaço da aba */
+            align-items: center;
+            justify-content: center;
+            gap: .75rem;
+            color: #4A4A4A;
+        }
+        .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 30px;
+            height: 30px;
+        }
+        .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 4px solid #2E5C8A;
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: #2E5C8A transparent transparent transparent;
+        }
+        .lds-ring div:nth-child(1) { animation-delay: -0.45s; }
+        .lds-ring div:nth-child(2) { animation-delay: -0.3s; }
+        .lds-ring div:nth-child(3) { animation-delay: -0.15s; }
+        @keyframes lds-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # --- HTML DO LOADER ---
+    loader_html = """
+        <div class="loader-wrap">
+            <span class="lds-ring"><div></div><div></div><div></div><div></div></span>
+            <span>Gerando gráfico...</span>
+        </div>
+    """
+    
+    loader_tabela_html = """
+        <div class="loader-wrap">
+            <span class="lds-ring"><div></div><div></div><div></div><div></div></span>
+            <span>Gerando tabela...</span>
+        </div>
+    """
+
     st.markdown("""
          <div class="text-container">
             <h1>Conhecimento Específico ENADE 2023</h1>
@@ -46,40 +100,48 @@ def show_page(Enade_2023, UFPA_data, COURSE_CODES, hei_dict):
     
     if course_code and group_code:
         with tab1:
-            with st.spinner("Gerando gráfico de razão..."):
-                fig1, fig1_img, _, _ = plot_performance_graph(Enade_2023, COURSE_CODES, group_code, course_code)
-                st.session_state['razao_chart'] = fig1_img
-                if fig1:
-                    st.pyplot(fig1)
-                else:
-                    st.warning("Não foi possível gerar o gráfico de razão para este curso.")
+            placeholder1 = st.empty()
+            placeholder1.markdown(loader_html, unsafe_allow_html=True)
+            
+            fig1, fig1_img, _, _ = plot_performance_graph(Enade_2023, COURSE_CODES, group_code, course_code)
+            st.session_state['razao_chart'] = fig1_img
+            
+            placeholder1.empty()  # Limpa o loader
+            if fig1:
+                st.pyplot(fig1)
+            else:
+                st.warning("Não foi possível gerar o gráfico de razão para este curso.")
+
         with tab2:
-            with st.spinner("Gerando gráfico de percentual..."):
-                _, _, fig2, fig2_img = plot_performance_graph(Enade_2023, COURSE_CODES, group_code, course_code)
-                st.session_state['percent_chart'] = fig2_img
-                if fig2:
-                    st.pyplot(fig2)
-                else:
-                    st.warning("Não foi possível gerar o gráfico de percentual para este curso.")
+            placeholder2 = st.empty()
+            placeholder2.markdown(loader_html, unsafe_allow_html=True)
+            
+            _, _, fig2, fig2_img = plot_performance_graph(Enade_2023, COURSE_CODES, group_code, course_code)
+            st.session_state['percent_chart'] = fig2_img
+            
+            placeholder2.empty() # Limpa o loader
+            if fig2:
+                st.pyplot(fig2)
+            else:
+                st.warning("Não foi possível gerar o gráfico de percentual para este curso.")
 
         with tab3:
-            with st.spinner("Gerando tabela de ranking..."):
-                ranking_df = show_best_hei_ranking_table(
-                    Enade_2023, COURSE_CODES, hei_dict, group_code, course_code, public_only=True
-                )
-                
-                # --- ALTERAÇÃO APLICADA AQUI ---
-                # Adicionando configuração de colunas para controlar a largura e evitar a barra de rolagem,
-                # mantendo a interatividade do st.dataframe.
-                column_config = {
-                    "Tema": st.column_config.Column(width="medium"),
-                    "IES com o melhor desempenho": st.column_config.Column(width="large"),
-                    "Nº de participantes": st.column_config.Column(width="small"),
-                    # Renomeia a coluna no cabeçalho da tabela para incluir o sufixo "(%)"
-                    "Melhor curso (%)": st.column_config.NumberColumn(format="%.2f %%"),
-                    "UFPA (%)": st.column_config.NumberColumn(format="%.2f %%")
-                }
+            placeholder3 = st.empty()
+            placeholder3.markdown(loader_tabela_html, unsafe_allow_html=True)
 
-                st.dataframe(ranking_df, use_container_width=True, column_config=column_config)
+            ranking_df = show_best_hei_ranking_table(
+                Enade_2023, COURSE_CODES, hei_dict, group_code, course_code, public_only=True
+            )
+            
+            column_config = {
+                "Tema": st.column_config.Column(width="medium"),
+                "IES com o melhor desempenho": st.column_config.Column(width="large"),
+                "Nº de participantes": st.column_config.Column(width="small"),
+                "Melhor curso (%)": st.column_config.NumberColumn(format="%.2f %%"),
+                "UFPA (%)": st.column_config.NumberColumn(format="%.2f %%")
+            }
+            
+            placeholder3.empty() # Limpa o loader
+            st.dataframe(ranking_df, use_container_width=True, column_config=column_config)
     else:
         st.warning("Não foi possível encontrar os detalhes para o curso selecionado. Verifique os dados.")
