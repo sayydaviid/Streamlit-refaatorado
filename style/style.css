@@ -1,4 +1,5 @@
 /* STYLE CSS FINAL (atualizado e unificado) */
+
 /* Importar fonte Inter */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -288,7 +289,7 @@ html, body, [class*="css"] {
 
 /* =========================================================
    FORCE UNIFIED BG NA SIDEBAR (remove qualquer cinza)
-   ========================================================= */
+========================================================= */
 
 /* 0) Variável secundária do tema = mesmo fundo da sidebar */
 :root, .stApp, [data-testid="stSidebar"] {
@@ -321,7 +322,7 @@ html, body, [class*="css"] {
 
 /* =========================================================
    GRÁFICOS: auto-fit na viewport (sem scroll)
-   ========================================================= */
+========================================================= */
 
 /* Envolva a imagem do gráfico com <div class="chart-fit"> */
 .chart-fit img {
