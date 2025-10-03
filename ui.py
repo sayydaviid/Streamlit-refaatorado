@@ -24,19 +24,34 @@ def get_base64_image(relative_path: str) -> str:
 def create_sidebar() -> str:
     """Cria a barra de navegação lateral e retorna a página selecionada."""
     with st.sidebar:
+        # Garante que o CSS está aplicado antes de renderizar o menu
+        load_css()
+
         st.markdown("### Menu")
+        # Wrapper para controlar o fundo do bloco do menu e evitar discrepâncias
+        st.markdown('<div class="sb-menu">', unsafe_allow_html=True)
+
         page = option_menu(
             menu_title=None,
-            options=["🏠 Página Inicial", "📊 Conhecimento Específico", "📝 Questionário do Estudante", "📥 Baixar Relatório"],
+            options=[
+                "🏠 Página Inicial",
+                "📊 Conhecimento Específico",
+                "📝 Questionário do Estudante",
+                "📥 Baixar Relatório",
+            ],
             icons=["house-door-fill", "bar-chart-line-fill", "pencil-square", "download"],
             default_index=0,
             styles={
-                "container": {"padding": "0!important", "background-color": "transparent"},
-                "nav-link": {"font-size": "17px", "color": "#4A4A4A", "padding": "8px 12px", "border-radius": "12px", "margin": "4px 0"},
+                "container": {"padding": "0!important", "background-color": "var(--sb-bg)"},
+                "nav-link": {"font-size": "17px", "color": "var(--sb-fg)", "padding": "8px 12px",
+                            "border-radius": "12px", "margin": "4px 0"},
                 "icon": {"font-size": "18px", "margin-right": "8px"},
-                "nav-link-selected": {"background-color": "rgb(209 223 255)", "font-weight": "700", "color": "#212121"},
+                "nav-link-selected": {"background-color": "var(--sb-active-bg)", "font-weight": "700",
+                                    "color": "var(--sb-active-fg)"},
             },
         )
+
+        st.markdown("</div>", unsafe_allow_html=True)
     return page
 
 def display_home_page():
