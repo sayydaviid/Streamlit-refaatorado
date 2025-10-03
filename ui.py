@@ -24,34 +24,37 @@ def get_base64_image(relative_path: str) -> str:
 def create_sidebar() -> str:
     """Cria a barra de navegação lateral e retorna a página selecionada."""
     with st.sidebar:
+
         st.markdown("### Menu")
         page = option_menu(
             menu_title=None,
-            
-            # 1. Mantemos os emojis que você quer nos nomes das opções
-            options=["🏠 Página Inicial", "📊 Conhecimento Específico", "📝 Questionário do Estudante", "📥 Baixar Relatório"],
-            
-            # 2. O PARÂMETRO 'icons' FOI COMPLETAMENTE REMOVIDO
-            
+            options=[
+                "🏠 Página Inicial",
+                "📊 Conhecimento Específico",
+                "📝 Questionário do Estudante",
+                "📥 Baixar Relatório",
+            ],
+            # sem 'icons'
             default_index=0,
             styles={
-                "container": {"padding": "0!important", "background-color": "transparent"},
-                # A chave "icon" foi removida para garantir que não haja conflito
+                # usa o mesmo fundo da sidebar (varia com claro/escuro)
+                "container": {"padding": "0!important", "background-color": "var(--sb-bg)"},
+                # texto herda da var --sb-fg (preto no claro, branco no escuro)
                 "nav-link": {
                     "font-size": "17px",
-                    "color": "#FAFAFA",
+                    "color": "var(--sb-fg)",
                     "padding": "10px",
                     "border-radius": "10px",
                     "margin": "5px 0",
                     "transition": "0.2s"
                 },
                 "nav-link:hover": {
-                    "background-color": "rgba(255, 255, 255, 0.1)"
+                    "background-color": "var(--sb-hover-bg)"
                 },
                 "nav-link-selected": {
-                    "background-color": "#FFFFFF",
+                    "background-color": "var(--sb-active-bg)",
                     "font-weight": "600",
-                    "color": "#212121"
+                    "color": "var(--sb-active-fg)"
                 },
             }
         )

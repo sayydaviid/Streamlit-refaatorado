@@ -1,291 +1,351 @@
-/* STYLE CSS FINAL */
+/* STYLE CSS FINAL (atualizado e unificado) */
 /* Importar fonte Inter */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* Variáveis CSS */
+/* ==============================
+   Variáveis CSS (inclui Sidebar)
+=================================*/
 :root {
-    --primary-blue: #2E5C8A;
-    --white: #ffffff;
-    --text-dark: #111827; /* preto/quase preto padrão */
+  --primary-blue: #2E5C8A;
+  --white: #ffffff;
+
+  /* Sidebar - modo claro */
+  --sb-bg: #ffffff;
+  --sb-fg: #222222;
+  --sb-active-bg: #d1dfff;
+  --sb-active-fg: #111111;
+  --sb-hover-bg: rgba(0,0,0,0.06);
+
+  /* Fundo principal */
+  --app-bg: #f8fafc;
 }
 
-/* Reset do Streamlit */
-.main .block-container {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    max-width: 1200px;
+/* Ajuste automático para dark mode (se o navegador/sistema estiver escuro) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sb-bg: #0e1117;
+    --sb-fg: #e6e6e6;
+    --sb-active-bg: #1f2a44;
+    --sb-active-fg: #ffffff;
+    --sb-hover-bg: rgba(255,255,255,0.08);
+    --app-bg: #0b0e14;
+  }
 }
 
-/* Fonte + COR PADRÃO DO TEXTO (preta) */
+/* ==============================
+   Reset do Streamlit / Base
+=================================*/
 html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-    color: var(--text-dark) !important; /* força texto escuro global */
+  font-family: 'Inter', sans-serif;
 }
 
-/* Texto geral escuro (NÃO força markdown inteiro) */
-.stApp, .main, .stText, label {
-    color: var(--text-dark) !important;
+.main .block-container {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  max-width: 1200px;
 }
 
-/* >>> Só o título "Menu" da sidebar em branco <<<  */
-[data-testid="stSidebar"] [data-testid="stMarkdownContainer"]:first-of-type h3 {
-    color: #ffffff !important;
-}
-/* Se o "Menu" não for o primeiro markdown na sua sidebar, ajuste o índice:
-[data-testid="stSidebar"] [data-testid="stMarkdownContainer"]:nth-of-type(2) h3 { color:#ffffff !important; }
-*/
-
-/* --- TÍTULO DA PÁGINA (st.title) --- */
-[data-testid="stHeading"] h1 {
-    color: #31333F !important;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+/* Fundo geral da app */
+.stMain, .stApp {
+  background-color: var(--app-bg) !important;
 }
 
-/* --- SEÇÃO DO CABEÇALHO (se usada) --- */
+/* ==============================
+   Sidebar (corrige contraste e tema)
+   Funciona com streamlit-option-menu
+=================================*/
+[data-testid="stSidebar"] {
+  background: var(--sb-bg) !important;
+  color: var(--sb-fg) !important;
+}
+
+/* Força cor do título "Menu" e textos/links genéricos na sidebar */
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4,
+[data-testid="stSidebar"] h5,
+[data-testid="stSidebar"] h6,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] a,
+[data-testid="stSidebar"] span {
+  color: var(--sb-fg) !important;
+}
+
+/* Option Menu: estados padrão, hover e selecionado */
+[data-testid="stSidebar"] .nav-link {
+  color: var(--sb-fg) !important;
+  background: transparent !important;
+  border-radius: 12px !important;
+}
+
+[data-testid="stSidebar"] .nav-link:hover {
+  background: var(--sb-hover-bg) !important;
+  color: var(--sb-fg) !important;
+}
+
+[data-testid="stSidebar"] .nav-link-selected {
+  background: var(--sb-active-bg) !important;
+  color: var(--sb-active-fg) !important;
+  font-weight: 700 !important;
+}
+
+/* Ícones e spans herdarem a cor corretamente */
+[data-testid="stSidebar"] .nav-link .icon,
+[data-testid="stSidebar"] .nav-link > div,
+[data-testid="stSidebar"] .nav-link span,
+[data-testid="stSidebar"] .nav-link i {
+  color: inherit !important;
+  fill: currentColor !important;
+}
+
+/* Acessibilidade no foco via teclado */
+[data-testid="stSidebar"] .nav-link:focus-visible {
+  outline: 2px solid var(--sb-active-bg) !important;
+  outline-offset: 2px !important;
+}
+
+/* ==============================
+   Seção do Cabeçalho (Hero)
+=================================*/
 .hero-section {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    border: solid 1px #f1f1f1;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    position: relative;
-    min-height: 250px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  border: solid 1px #f1f1f1;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  position: relative;
+  min-height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
 }
+
+/* Container dos logos que ficará no canto superior direito */
 .logo-group-top-right {
-    position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
 }
+
+/* Tamanho dos logos no canto (pequenos) */
 .logo-group-top-right img {
   max-height: 40px;
   width: auto;
   object-fit: contain;
 }
+
+/* Container do título principal */
 .title-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+
 .title-container h1 {
-    font-size: 1.8rem;
-    font-weight: 400;
-    color: #4A4A4A;
-    margin: 0 0 0.5rem 0;
+  font-size: 1.8rem;
+  font-weight: 400;
+  color: #4A4A4A;
+  margin: 0 0 0.5rem 0;
 }
-.enade-title-image { max-width: 400px; height: auto; }
 
-/* Cards de introdução */
+.enade-title-image {
+  max-width: 400px;
+  height: auto;
+}
+
+/* ==============================
+   Cards de introdução
+=================================*/
 .intro-card {
-    background: linear-gradient(135deg, #E0F2FE 0%, #ffffff 100%);
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    border: 1px solid #E5E7EB;
-    margin-bottom: 2rem;
+  background: linear-gradient(135deg, #E0F2FE 0%, #ffffff 100%);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E5E7EB;
+  margin-bottom: 2rem;
 }
+
 .intro-card h2 {
-    color: var(--primary-blue);
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    font-size: 2rem;
+  color: var(--primary-blue);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 2rem;
 }
+
 .intro-content p {
-    font-size: 1.1rem;
-    line-height: 1.7;
-    margin-bottom: 1.5rem;
-    color: #4e4c4c;
-    text-align: justify;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  color: #4e4c4c;
+  text-align: justify;
 }
 
-/* Footer */
+/* ==============================
+   Footer
+=================================*/
 .footer {
-    background: var(--primary-blue);
-    color: white;
-    text-align: center;
-    padding: 1.5rem;
-    border-radius: 12px;
-    margin-top: 3rem;
-}
-.footer p { font-size: 0.9rem; opacity: 0.9; margin: 0; }
-
-.stMain { background-color: #f8fafc; }
-
-.stDownloadButton{ display: flex; justify-content: center; }
-.stDownloadButton button{
-    border-radius: 1rem;
-    padding: .5rem 1.55rem;
-    border: 2px solid rgb(1 74 147 / 52%);
-}
-.stImage img{ max-width: 80%; display: block; margin-left: auto; margin-right: auto; }
-
-/* Conteúdo textual padrão */
-.text-container {
-    background: #FFFFFF;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-    border: 1px solid #E5E7EB;
+  background: var(--primary-blue);
+  color: white;
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-top: 3rem;
 }
 
-/* ALERTA (st.warning) */
-[data-testid="stAlert"] {
-    background-color: #FFFBEB;
-    color: #5d4a0a;
-    border: 1px solid #FFEEBA;
-    border-radius: 12px;
-    padding: 1rem;
-}
-[data-testid="stAlert"] * { color: #5d4a0a !important; }
-[data-testid="stAlert"] li, [data-testid="stAlert"] p, [data-testid="stAlert"] strong {
-     background-color: transparent !important;
+.footer p {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin: 0;
 }
 
-/* Textos */
+/* ==============================
+   Botões de download / ajustes
+=================================*/
+.stDownloadButton {
+  display: flex;
+  justify-content: center;
+}
+
+.stDownloadButton button {
+  border-radius: 1rem;
+  padding: .5rem 1.55rem;
+  border: 2px solid rgb(1 74 147 / 52%);
+}
+
+/* ==============================
+   Tipografia de blocos de texto
+=================================*/
 .text-container h1 {
-    font-size: 2.2rem;
-    font-weight: 600;
-    color: #2E5C8A;
-    margin-bottom: 1.5rem;
+  font-size: 2.5rem;
 }
+
 .text-container p {
-    font-size: 1.1rem;
-    line-height: 1.7;
-    margin-bottom: 1.5rem;
-    color: #4e4c4c;
-    text-align: justify;
+  font-size: 18px;
+  text-align: justify;
 }
 
-.logo-group-top-right img#cpa-logo {
-  max-height: 60px; /* <-- Ajuste este valor como desejar (o original era 40px) */
+/* ==============================
+   Imagens
+=================================*/
+.stImage img {
+  max-width: 80%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* TABS */
-[data-testid="stTab"] p { color: #4A4A4A; }
-[data-testid="stTab"][aria-selected="true"] { border-bottom: 2px solid #FF4B4B; }
-[data-testid="stTab"][aria-selected="true"] p { color: #FF4B4B; }
-
-/* Checkbox label */
-[data-testid="stCheckbox"] label { color: #4A4A4A !important; }
-
-/* Fade-in tab content */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-[data-testid="stTabContent"] { animation: fadeIn 0.5s ease-out; }
-
-/* Responsividade text-container */
+/* ==============================
+   Responsividade
+=================================*/
 @media (max-width: 768px) {
-    .text-container { padding: 1.5rem; }
-    .text-container h1 { font-size: 1.8rem; }
-    .text-container p { font-size: 1rem; }
+  .hero-section {
+    padding: 1.5rem;
+    min-height: auto;
+    flex-direction: column;
+  }
+  .logo-group-top-right {
+    position: static;
+    order: -1;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  .title-container h1 {
+    font-size: 1.5rem;
+  }
+  .enade-title-image {
+    max-width: 200px;
+  }
 }
 
-/* Responsividade hero */
+/* ==============================
+   Wrapper do menu (unificar o bloco)
+=================================*/
+[data-testid="stSidebar"] .sb-menu {
+  background: var(--sb-bg) !important;  /* mesmo fundo da sidebar */
+  color: var(--sb-fg) !important;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* UL/containers internos do option-menu */
+[data-testid="stSidebar"] .sb-menu ul,
+[data-testid="stSidebar"] .sb-menu .nav,
+[data-testid="stSidebar"] .sb-menu .nav-pills,
+[data-testid="stSidebar"] .sb-menu .list-group {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* =========================================================
+   FORCE UNIFIED BG NA SIDEBAR (remove qualquer cinza)
+   ========================================================= */
+
+/* 0) Variável secundária do tema = mesmo fundo da sidebar */
+:root, .stApp, [data-testid="stSidebar"] {
+  --secondary-background-color: var(--sb-bg) !important;
+}
+
+/* 1) Todo elemento da sidebar herda o MESMO fundo por padrão */
+[data-testid="stSidebar"] * {
+  background-color: var(--sb-bg) !important;
+  background-image: none !important;
+}
+
+/* 2) Reaplicar estados corretos do menu (exceções) */
+[data-testid="stSidebar"] .nav-link {
+  background-color: transparent !important;            /* normal */
+  color: var(--sb-fg) !important;
+}
+[data-testid="stSidebar"] .nav-link:hover {
+  background-color: var(--sb-hover-bg) !important;     /* hover */
+}
+[data-testid="stSidebar"] .nav-link-selected {
+  background-color: var(--sb-active-bg) !important;    /* selecionado */
+  color: var(--sb-active-fg) !important;
+}
+
+/* 3) Qualquer container com var secundária inline continua igual ao sb-bg */
+[data-testid="stSidebar"] [style*="--secondary-background-color"] {
+  background-color: var(--sb-bg) !important;
+}
+
+/* =========================================================
+   GRÁFICOS: auto-fit na viewport (sem scroll)
+   ========================================================= */
+
+/* Envolva a imagem do gráfico com <div class="chart-fit"> */
+.chart-fit img {
+  max-height: 74vh;             /* cabe em uma tela típica */
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Tabs: menos padding para ganhar altura útil */
+[data-baseweb="tab-panel"] {
+  padding-top: 0.25rem !important;
+}
+
+/* (Opcional) Reduz um pouco o padding global para mais área útil de gráfico */
+@media (min-width: 769px) {
+  .main .block-container {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+}
+
+/* Mobile: reduz ligeiramente a altura máxima (barra do navegador/teclado) */
 @media (max-width: 768px) {
-    .hero-section { padding: 1.5rem; min-height: auto; flex-direction: column; }
-    .logo-group-top-right { position: static; order: -1; width: 100%; justify-content: center; margin-bottom: 2rem; }
-    .title-container h1 { font-size: 1.5rem; }
-    .enade-title-image { max-width: 200px; }
-}
-
-/* ======================== */
-/*  SELECTS (BaseWeb)      */
-/* ======================== */
-[data-baseweb="select"] [aria-label="Clear value"] { display: none !important; } /* Some o 'X' */
-[data-baseweb="select"] [role="combobox"],
-[data-baseweb="select"] [role="combobox"] *,
-[data-baseweb="select"] input { color: var(--text-dark) !important; }
-[data-baseweb="select"] input::placeholder { color: #6b7280 !important; }
-[data-baseweb="menu"] *, [role="listbox"] * { color: var(--text-dark) !important; }
-
-/* ========================================================= */
-/*          PÁGINA: Gerar & Baixar Relatório (extras)        */
-/* ========================================================= */
-
-/* Bloqueia rolagem horizontal global */
-html, body, .stApp, [data-testid="stAppViewContainer"], .main, .block-container {
-    overflow-x: clip !important;
-    max-width: 100% !important;
-}
-
-/* Wrapper do viewer: proíbe overflow-x dentro */
-.no-x-scroll, .no-x-scroll * { max-width: 100% !important; }
-.no-x-scroll { overflow-x: hidden !important; }
-.no-x-scroll [style*="overflow: auto"],
-.no-x-scroll [style*="overflow:auto"],
-.no-x-scroll [style*="overflow: scroll"],
-.no-x-scroll [style*="overflow:scroll"] { overflow-x: hidden !important; }
-/* pdf.js comuns */
-.no-x-scroll #outerContainer,
-.no-x-scroll #mainContainer,
-.no-x-scroll #viewerContainer,
-.no-x-scroll .pdf-viewer,
-.no-x-scroll .pdfViewer { overflow-x: hidden !important; }
-
-/* Ajuda acima dos selects */
-.helper-text { margin: .5rem 0 .75rem 0; color:#374151; }
-
-/* Loader (bolinha girando) */
-.loader-wrap{
-    display:flex; align-items:center; gap:.75rem;
-    padding:.6rem .9rem; border:1px dashed #e5e7eb;
-    border-radius:10px; background:#f9fafb; color:#111827;
-    margin:.25rem 0 .25rem 0;
-}
-.lds-ring{ display:inline-block; position:relative; width:22px; height:22px; }
-.lds-ring div{
-    box-sizing:border-box; display:block; position:absolute;
-    width:22px; height:22px; border:3px solid #2E5C8A; border-radius:50%;
-    animation:lds-ring 1.2s linear infinite;
-    border-color:#2E5C8A transparent transparent transparent;
-}
-.lds-ring div:nth-child(1){ animation-delay:-0.45s; }
-.lds-ring div:nth-child(2){ animation-delay:-0.3s; }
-.lds-ring div:nth-child(3){ animation-delay:-0.15s; }
-@keyframes lds-ring{ 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
-
-/* Subtítulo da prévia */
-.h4-tight { margin: .25rem 0 .5rem 0; font-size: 1.15rem; font-weight: 700; color:#1f2937; }
-
-/* Botão de download pequeno ao lado do título (+ texto SEMPRE branco) */
-/* =============== Botão "Baixar PDF" compacto ao lado do título =============== */
-/* Botão HTML de download (texto sempre branco) */
-.inline-dl .dl-btn{
-  display:inline-flex;
-  align-items:center;
-  gap:.5rem;
-  background: linear-gradient(135deg, #111827, #111827);
-  padding:.48rem .9rem;
-  border-radius:10px;
-  font-size:.875rem;
-  font-weight:700;
-  letter-spacing:.2px;
-  box-shadow:0 6px 16px rgba(46,92,138,.25);
-  text-decoration:none !important;
-  color:#ffffff !important; /* texto branco */
-  border:0;
-}
-.inline-dl .dl-btn:hover{
-  transform: translateY(-1px);
-  box-shadow:0 10px 22px rgba(46,92,138,.35);
-}
-.inline-dl .dl-btn:active{
-  transform:none;
-  box-shadow:0 4px 12px rgba(0,0,0,.2);
-}
-.inline-dl .dl-btn:visited,
-.inline-dl .dl-btn *{
-  color:#ffffff !important; /* garante branco sempre */
+  .chart-fit img { max-height: 62vh; }
 }
