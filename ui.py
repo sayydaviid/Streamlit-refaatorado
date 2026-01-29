@@ -23,20 +23,35 @@ def get_base64_image(relative_path: str) -> str:
 
 def create_sidebar() -> str:
     """Cria a barra de navegação lateral e retorna a página selecionada."""
+    
+    # --- CONTROLE DE VISIBILIDADE ---
+    # Mude para True para exibir o menu completo (ENADE antigo + Relatório)
+    # Mude para False para exibir apenas ENAMED
+    MOSTRAR_TUDO = False 
+    
+    # Constrói a lista de opções dinamicamente
+    opcoes_menu = ["🏠 Página Inicial"]
+    
+    if MOSTRAR_TUDO:
+        opcoes_menu.extend(["📊 Conhecimento Específico", "📝 Questionário do Estudante"])
+    
+    # Itens do ENAMED (Sempre visíveis)
+    opcoes_menu.extend(["🩺 ENAMED", "Questionário do Estudante Enamed"])
+    
+    if MOSTRAR_TUDO:
+        opcoes_menu.append("📥 Baixar Relatório")
+
     with st.sidebar:
         st.markdown("### Menu")
         page = option_menu(
             menu_title=None,
             
-            # 1. Mantemos os emojis que você quer nos nomes das opções
-            options=["🏠 Página Inicial", "📊 Conhecimento Específico", "📝 Questionário do Estudante", "📥 Baixar Relatório"],
-            
-            # 2. O PARÂMETRO 'icons' FOI COMPLETAMENTE REMOVIDO
+            # Passamos a lista dinâmica aqui
+            options=opcoes_menu,
             
             default_index=0,
             styles={
                 "container": {"padding": "0!important", "background-color": "transparent"},
-                # A chave "icon" foi removida para garantir que não haja conflito
                 "nav-link": {
                     "font-size": "17px",
                     "color": "#FAFAFA",
