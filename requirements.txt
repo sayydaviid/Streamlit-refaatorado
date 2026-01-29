@@ -2,7 +2,7 @@ pandas
 numpy
 matplotlib
 plotly
-streamlit
+streamlit>=1.40.0
 streamlit_pdf_viewer
 streamlit_option_menu
 PyPDF2
