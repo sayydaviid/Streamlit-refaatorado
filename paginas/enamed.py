@@ -1,7 +1,6 @@
 # paginas/enamed.py
-# ENAMED 2025 – Desempenho Geral + Percepção de Prova
-# (ATUALIZADO: Ajuste de margem superior nos gráficos para não cortar os números)
-
+# ENAMED 2025 – Desempenho Geral + Percepção de Prova + Item Analysis
+# (ATUALIZADO: Ajuste visual no gráfico de barras - Limite Y aumentado e sufixo %)
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -14,16 +13,14 @@ _FLOAT_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
 # ============================================================
 # Helpers
 # ============================================================
-
 def to_numeric_robust(series: pd.Series) -> pd.Series:
     """Converte Series pra float de forma robusta."""
     if pd.api.types.is_numeric_dtype(series):
         return pd.to_numeric(series, errors="coerce")
-
     s = series.copy()
     s = s.fillna("").map(str).str.strip()
     s = s.str.replace(",", ".", regex=False)
-
+    
     def parse_cell(x: str) -> float:
         if x == "" or x == ".":
             return np.nan
@@ -40,9 +37,8 @@ def to_numeric_robust(series: pd.Series) -> pd.Series:
                 except Exception:
                     continue
             return float(np.mean(vals)) if vals else np.nan
-
+            
     return s.apply(parse_cell)
-
 
 def _norm_city(x: str) -> str:
     """Normaliza município pra comparar."""
@@ -55,7 +51,6 @@ def _norm_city(x: str) -> str:
             .replace("ó", "o").replace("ô", "o").replace("õ", "o")
             .replace("ú", "u").replace("ç", "c"))
 
-
 def _co_ies_to_int(co_ies):
     if pd.isna(co_ies):
         return None
@@ -63,7 +58,6 @@ def _co_ies_to_int(co_ies):
         return int(float(co_ies))
     except Exception:
         return co_ies
-
 
 def _ies_label(co_ies, hei_dict: dict) -> str:
     """Label amigável pra IES."""
@@ -75,19 +69,17 @@ def _ies_label(co_ies, hei_dict: dict) -> str:
         return f"{nome} (CO_IES={c})"
     return f"CO_IES={c}"
 
-
 # ============================================================
 # Página Principal
 # ============================================================
-
 def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
     st.markdown(
         """
         <div class="text-container">
             <h1>ENAMED 2025 – Desempenho e Percepção</h1>
             <p>
-                Esta seção apresenta análises do desempenho dos estudantes (Médias, Proficiência, ENARE)
-                e a percepção deles sobre a prova aplicada (dificuldade, tempo, clareza).
+                Esta seção apresenta análises do desempenho dos estudantes, incluindo a análise detalhada de acertos por questão
+                e a percepção sobre a prova aplicada.
             </p>
         </div>
         """,
@@ -142,6 +134,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
         municipio = st.selectbox("Selecione o Município", municipios)
 
     df_mun = df_2025[df_2025["NOME_MUNIC_CURSO"] == municipio].copy()
+
     if df_mun.empty:
         st.warning("Não há dados para o município selecionado.")
         return
@@ -175,6 +168,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
         curso = st.selectbox("Selecione o Curso", cursos)
 
     curso_df = df_mun_ies[df_mun_ies["NOME_CURSO"] == curso].copy()
+
     if curso_df.empty:
         st.warning("Sem dados para os filtros selecionados.")
         return
@@ -199,7 +193,8 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
     # ---------------------------------------------------------
     # Definição das Abas
     # ---------------------------------------------------------
-    tab_medias, tab_area, tab_prof, tab_enare, tab_percepcao, tab_pdf = st.tabs([
+    tab_acertos, tab_medias, tab_area, tab_prof, tab_enare, tab_percepcao, tab_pdf = st.tabs([
+        "✅ Percentual de Acertos",
         "📊 Médias Gerais",
         "📈 Distribuição por Área",
         "🎓 Proficiência",
@@ -231,9 +226,18 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
                 .reset_index()
                 .rename(columns={"index": "Área de Conhecimento"})
             )
+            
+            # --- CÁLCULO DE PERCENTUAL ---
+            df_medias["Percentual de Acerto"] = (df_medias["Média de Acertos (/20)"] / 20) * 100
+            
+            # Formatação
             df_medias["Média de Acertos (/20)"] = df_medias["Média de Acertos (/20)"].map(
                 lambda x: f"{x:.2f}" if pd.notna(x) else ""
             )
+            df_medias["Percentual de Acerto"] = df_medias["Percentual de Acerto"].map(
+                lambda x: f"{x:.1f}%" if pd.notna(x) else ""
+            )
+            
             df_medias.index = range(1, len(df_medias) + 1)
             st.dataframe(df_medias, use_container_width=True)
 
@@ -264,9 +268,8 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             ax.set_title("Desempenho por Área – ENAMED 2025")
             ax.bar_label(bars, fmt="%.2f", padding=3)
             
-            # --- AJUSTE DE FOLGA NO TOPO ---
             if values:
-                ax.set_ylim(0, max(values) * 1.25) # Aumenta 25% o limite superior
+                ax.set_ylim(0, max(values) * 1.25) 
                 
             plt.xticks(rotation=0)
             plt.tight_layout()
@@ -281,13 +284,12 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
         else:
             prof = curso_df["PROFICIENCIA_NUM"]
             n_ok = int(prof.notna().sum())
-
             if n_ok == 0:
                 st.warning("Sem dados válidos de proficiência.")
             else:
                 prof_series = prof.dropna()
                 prof_mean = float(prof_series.mean())
-                CORTE_OFICIAL_INEP = -0.41
+                CORTE_OFICIAL_INEP = -0.41 # Exemplo
                 aprovados = prof_series[prof_series >= CORTE_OFICIAL_INEP].count()
                 taxa_aprovacao = (aprovados / len(prof_series)) * 100
 
@@ -301,6 +303,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
                     """,
                     unsafe_allow_html=True,
                 )
+
                 col_m1, col_m2, col_m3 = st.columns(3)
                 col_m1.metric("Nota Média (Z-Score)", f"{prof_mean:.2f}")
                 col_m2.metric("Nota de Corte", f"{CORTE_OFICIAL_INEP:.2f}")
@@ -312,6 +315,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
                 ax.set_xlabel("Proficiência (Escala Padronizada)")
                 ax.set_ylabel("Número de Estudantes")
                 ax.set_title("Distribuição da Proficiência – ENAMED 2025")
+
                 x_min = min(prof_series.min(), -3.0)
                 x_max = max(prof_series.max(), 3.0)
                 ax.set_xlim(left=x_min, right=x_max)
@@ -330,7 +334,6 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             enare = curso_df["PER_ACERTO_ENARE"]
             n_total = len(enare)
             n_ok = int(enare.notna().sum())
-
             if n_ok == 0:
                 st.warning("Sem dados válidos para o ENARE.")
             else:
@@ -351,7 +354,90 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             st.caption(f"ENARE: {n_ok}/{n_total} valores válidos.")
 
     # =========================
-    # TAB 5) PERCEPÇÃO DE PROVA
+    # TAB 5) PERCENTUAL DE ACERTOS (ATUALIZADO)
+    # =========================
+    with tab_acertos:
+        st.subheader("Análise Detalhada por Questão")
+        
+        candidatos_prioridade = ["DS_VT_ACE_OCE", "DS_VT_ACE_OBJ", "DS_VT_ACE_OFG"]
+        candidatos_genericos = [c for c in curso_df.columns if "DS_VT_ACE" in c]
+        
+        col_vetor = None
+        
+        todos_candidatos = []
+        for c in candidatos_prioridade:
+            if c not in todos_candidatos: 
+                todos_candidatos.append(c)
+        for c in candidatos_genericos:
+            if c not in todos_candidatos: 
+                todos_candidatos.append(c)
+        
+        for c in todos_candidatos:
+            if c in curso_df.columns:
+                temp_series = curso_df[c].astype(str).str.strip()
+                validos = temp_series[temp_series != ""].count()
+                validos_nan = curso_df[c].notna().sum()
+                if validos > 0 and validos_nan > 0:
+                    col_vetor = c
+                    break
+        
+        if col_vetor is None:
+            st.error("Não foi possível encontrar uma coluna válida com o vetor de respostas (ex: DS_VT_ACE_OCE).")
+            st.info(f"Colunas disponíveis no dataset: {list(curso_df.columns)}")
+        else:
+            
+            raw_data = curso_df[col_vetor].astype(str).replace("nan", np.nan)
+            vetores = raw_data[raw_data.str.strip() != ""].dropna()
+            
+            if vetores.empty:
+                st.warning(f"A coluna {col_vetor} existe, mas não contém dados válidos para os filtros selecionados.")
+            else:
+                tamanhos = vetores.str.len()
+                qtd_questoes = int(tamanhos.mode()[0]) if not tamanhos.empty else 0
+                
+                if qtd_questoes == 0:
+                     st.warning("Vetor de respostas com comprimento zero.")
+                else:
+                    acertos_por_questao = [0] * qtd_questoes
+                    total_alunos_vetor = 0
+                    
+                    for v in vetores:
+                        v = v.strip() 
+                        if len(v) < qtd_questoes:
+                            continue 
+                        
+                        total_alunos_vetor += 1
+                        
+                        for i in range(qtd_questoes):
+                            if v[i] == '1': 
+                                acertos_por_questao[i] += 1
+                    
+                    if total_alunos_vetor == 0:
+                         st.warning("Nenhum vetor válido encontrado após processamento.")
+                    else:
+                        labels_q = [f"Q{i+1}" for i in range(qtd_questoes)]
+                        percentuais = [(x / total_alunos_vetor) * 100 for x in acertos_por_questao]
+                        
+                        fig, ax = plt.subplots(figsize=(12, 5)) 
+                        bars = ax.bar(labels_q, percentuais, color="#2E5C8A")
+                        
+                        ax.set_ylabel("% de Acertos")
+                        ax.set_xlabel("Questão")
+                        ax.set_title(f"Percentual de Acertos por Questão \n(Total de alunos: {total_alunos_vetor})")
+                        
+                        # --- MODIFICAÇÃO: Margem superior aumentada para 115 ---
+                        ax.set_ylim(0, 115)
+                        
+                        # --- MODIFICAÇÃO: Adicionado '%%' no formato para aparecer o símbolo % ---
+                        ax.bar_label(bars, fmt="%.0f%%", padding=3, fontsize=7, rotation=90)
+                        
+                        plt.xticks(rotation=90, fontsize=8)
+                        plt.tight_layout()
+                        
+                        st.pyplot(fig)
+
+    # =========================
+    # TAB 6) PERCEPÇÃO DE PROVA
     # =========================
     with tab_percepcao:
         st.subheader("Questionário de Percepção sobre a Prova")
@@ -396,7 +482,6 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
         }
 
         cols_percep = [c for c in PERCEP_MAP.keys() if c in curso_df.columns]
-
         if not cols_percep:
             st.info("Dados de percepção de prova (CO_RS_I1...I9) não encontrados neste dataset.")
         else:
@@ -414,6 +499,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
                     texto = meta["opcoes"].get(letra, letra)
                     labels.append(f"{letra}: {texto}")
                     heights.append(val)
+
                     if letra in ['A', 'B'] and q_code not in ['CO_RS_I1', 'CO_RS_I2', 'CO_RS_I3']: 
                          colors.append("#2E8A5C") # Verde
                     elif letra in ['D', 'E'] and q_code not in ['CO_RS_I1', 'CO_RS_I2', 'CO_RS_I3']:
@@ -427,17 +513,16 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
                 ax.set_ylabel("Qtd. Estudantes")
                 ax.bar_label(bars, padding=3)
                 
-                # --- AJUSTE DE FOLGA NO TOPO ---
                 if heights:
-                    ax.set_ylim(0, max(heights) * 1.3) # Aumenta 30%
-
+                    ax.set_ylim(0, max(heights) * 1.3)
+                
                 caption_text = " | ".join([f"**{l}**: {t}" for l, t in meta["opcoes"].items()])
                 st.caption(caption_text)
                 st.pyplot(fig)
                 st.markdown("---")
 
     # =========================
-    # TAB 6) PDF PERCEPÇÃO
+    # TAB 7) PDF PERCEPÇÃO
     # =========================
     with tab_pdf:
         st.subheader("Questionário de Percepção de Prova - Original")
