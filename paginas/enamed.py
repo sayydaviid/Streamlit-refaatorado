@@ -1,6 +1,6 @@
 # paginas/enamed.py
 # ENAMED 2025 – Desempenho Geral + Percepção de Prova + Item Analysis
-# (ATUALIZADO: Ajuste visual no gráfico de barras - Limite Y aumentado e sufixo %)
+# (ATUALIZADO: CSS para ajustar abas na tela e remover o gradiente de corte)
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -73,6 +73,23 @@ def _ies_label(co_ies, hei_dict: dict) -> str:
 # Página Principal
 # ============================================================
 def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
+    # --- CSS PARA CORRIGIR O MENU DE ABAS (Remover o corte preto) ---
+    st.markdown("""
+        <style>
+        /* Compacta as abas para caberem na tela e evitar o scroll/gradiente */
+        [data-testid="stTabs"] button {
+            padding-left: 10px;
+            padding-right: 10px;
+            font-size: 14px; /* Fonte um pouco menor */
+            gap: 2px;
+        }
+        /* Garante que o container ocupe a largura correta */
+        [data-testid="stTabs"] {
+            overflow: visible; 
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     st.markdown(
         """
         <div class="text-container">
@@ -193,8 +210,9 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
     # ---------------------------------------------------------
     # Definição das Abas
     # ---------------------------------------------------------
-    tab_acertos, tab_medias, tab_area, tab_prof, tab_enare, tab_percepcao, tab_pdf = st.tabs([
+    tab_acertos, tab_alternativas, tab_medias, tab_area, tab_prof, tab_enare, tab_percepcao, tab_pdf = st.tabs([
         "✅ Percentual de Acertos",
+        "🔠 Análise de Alternativas",
         "📊 Médias Gerais",
         "📈 Distribuição por Área",
         "🎓 Proficiência",
@@ -204,7 +222,188 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
     ])
 
     # =========================
-    # TAB 1) MÉDIAS GERAIS
+    # TAB 1) PERCENTUAL DE ACERTOS (BINÁRIO)
+    # =========================
+    with tab_acertos:
+        st.subheader("Análise Detalhada por Questão (Acertos)")
+        
+        candidatos_prioridade = ["DS_VT_ACE_OCE", "DS_VT_ACE_OBJ", "DS_VT_ACE_OFG"]
+        candidatos_genericos = [c for c in curso_df.columns if "DS_VT_ACE" in c]
+        
+        col_vetor = None
+        
+        todos_candidatos = []
+        for c in candidatos_prioridade:
+            if c not in todos_candidatos: 
+                todos_candidatos.append(c)
+        for c in candidatos_genericos:
+            if c not in todos_candidatos: 
+                todos_candidatos.append(c)
+        
+        for c in todos_candidatos:
+            if c in curso_df.columns:
+                s_str = curso_df[c].astype(str)
+                validos = s_str[
+                    (s_str != "nan") & 
+                    (s_str != "None") & 
+                    (s_str.str.strip() != "")
+                ]
+                
+                if not validos.empty:
+                    col_vetor = c
+                    break
+        
+        if col_vetor is None:
+            st.error("Não foi possível encontrar uma coluna válida com o vetor de respostas (ex: DS_VT_ACE_OCE).")
+            st.info(f"Colunas disponíveis no dataset: {list(curso_df.columns)}")
+        else:
+            st.caption(f"Utilizando dados da coluna: **{col_vetor}**")
+            
+            raw_data = curso_df[col_vetor].astype(str)
+            vetores = raw_data[
+                (raw_data != "nan") & 
+                (raw_data != "None") & 
+                (raw_data.str.strip() != "")
+            ]
+            
+            if vetores.empty:
+                st.warning(f"A coluna {col_vetor} existe, mas não contém dados válidos após filtragem.")
+            else:
+                tamanhos = vetores.str.len()
+                qtd_questoes = int(tamanhos.mode()[0]) if not tamanhos.empty else 0
+                
+                if qtd_questoes == 0:
+                     st.warning("Vetor de respostas com comprimento zero.")
+                else:
+                    acertos_por_questao = [0] * qtd_questoes
+                    total_alunos_vetor = 0
+                    
+                    for v in vetores:
+                        v = v.strip() 
+                        if len(v) < qtd_questoes:
+                            continue 
+                        
+                        total_alunos_vetor += 1
+                        
+                        for i in range(qtd_questoes):
+                            if v[i] == '1': 
+                                acertos_por_questao[i] += 1
+                    
+                    if total_alunos_vetor == 0:
+                         st.warning("Nenhum vetor válido encontrado após processamento.")
+                    else:
+                        labels_q = [f"Q{i+1}" for i in range(qtd_questoes)]
+                        percentuais = [(x / total_alunos_vetor) * 100 for x in acertos_por_questao]
+                        
+                        fig, ax = plt.subplots(figsize=(12, 5)) 
+                        bars = ax.bar(labels_q, percentuais, color="#2E5C8A")
+                        
+                        ax.set_ylabel("% de Acertos")
+                        ax.set_xlabel("Questão")
+                        ax.set_title(f"Percentual de Acertos por Questão \n(Total de alunos: {total_alunos_vetor})")
+                        
+                        ax.set_ylim(0, 115)
+                        ax.bar_label(bars, fmt="%.0f%%", padding=3, fontsize=7, rotation=90)
+                        
+                        plt.xticks(rotation=90, fontsize=8)
+                        plt.tight_layout()
+                        st.pyplot(fig)
+
+    # =========================
+    # TAB 2) ANÁLISE DE ALTERNATIVAS (AJUSTADO)
+    # =========================
+    with tab_alternativas:
+        st.subheader("Percentual de Marcação por Alternativa")
+        st.markdown("Esta tabela mostra qual a porcentagem de alunos que marcou cada alternativa em cada questão.")
+
+        # 1. Procurar colunas de vetor de ESCOLHAS (DS_VT_ESC_...)
+        candidatos_esc = ["DS_VT_ESC_OCE", "DS_VT_ESC_OBJ", "DS_VT_ESC_OFG"]
+        genericos_esc = [c for c in curso_df.columns if "DS_VT_ESC" in c]
+        
+        col_esc = None
+        todos_esc = []
+        for c in candidatos_esc: 
+            if c not in todos_esc: todos_esc.append(c)
+        for c in genericos_esc: 
+            if c not in todos_esc: todos_esc.append(c)
+            
+        for c in todos_esc:
+            if c in curso_df.columns:
+                s_str = curso_df[c].astype(str)
+                validos = s_str[
+                    (s_str != "nan") & 
+                    (s_str != "None") & 
+                    (s_str.str.strip() != "")
+                ]
+                
+                if not validos.empty:
+                    col_esc = c
+                    break
+        
+        if col_esc is None:
+            st.warning("Não foi possível encontrar uma coluna válida de Vetor de Escolhas (ex: DS_VT_ESC_OCE).")
+        else:
+            st.caption(f"Utilizando dados da coluna: **{col_esc}**")
+            
+            raw_esc = curso_df[col_esc].astype(str)
+            vetores_esc = raw_esc[
+                (raw_esc != "nan") & 
+                (raw_esc != "None") & 
+                (raw_esc.str.strip() != "")
+            ]
+            
+            if vetores_esc.empty:
+                st.warning("Dados de respostas vazios após filtragem.")
+            else:
+                mode_len = vetores_esc.str.len().mode()
+                qtd_q = int(mode_len[0]) if not mode_len.empty else 0
+                
+                if qtd_q == 0:
+                    st.error("Comprimento do vetor inválido.")
+                else:
+                    # Inicializa contagem
+                    stats = [{"A":0, "B":0, "C":0, "D":0, "E":0, "Outros":0} for _ in range(qtd_q)]
+                    total_alunos = 0
+                    
+                    for v in vetores_esc:
+                        v = v.strip().upper()
+                        if len(v) < qtd_q: continue
+                        total_alunos += 1
+                        
+                        for i in range(qtd_q):
+                            letra = v[i]
+                            if letra in stats[i]:
+                                stats[i][letra] += 1
+                            else:
+                                stats[i]["Outros"] += 1
+                                
+                    if total_alunos == 0:
+                        st.warning("Nenhum aluno válido processado.")
+                    else:
+                        # Monta DataFrame
+                        data_rows = []
+                        for i in range(qtd_q):
+                            row = {"Questão": f"Q{i+1}"}
+                            
+                            # Apenas A, B, C, D
+                            for key in ["A", "B", "C", "D"]:
+                                qtd = stats[i][key]
+                                perc = (qtd / total_alunos) * 100
+                                row[key] = perc 
+                            data_rows.append(row)
+                            
+                        df_alt = pd.DataFrame(data_rows).set_index("Questão")
+                        
+                        st.dataframe(
+                            df_alt.style
+                            .format("{:.1f}%")
+                            .background_gradient(cmap="Blues", axis=1)
+                        , use_container_width=True, height=500)
+                        
+                        st.caption(f"*Baseado em {total_alunos} estudantes.*")
+
+    # =========================
+    # TAB 3) MÉDIAS GERAIS
     # =========================
     with tab_medias:
         cols_media_exist = [c for c in cols_media if c in curso_df.columns]
@@ -242,7 +441,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             st.dataframe(df_medias, use_container_width=True)
 
     # =========================
-    # TAB 2) DISTRIBUIÇÃO POR ÁREA
+    # TAB 4) DISTRIBUIÇÃO POR ÁREA
     # =========================
     with tab_area:
         import textwrap
@@ -276,7 +475,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             st.pyplot(fig)
 
     # =========================
-    # TAB 3) PROFICIÊNCIA
+    # TAB 5) PROFICIÊNCIA
     # =========================
     with tab_prof:
         if "PROFICIENCIA_NUM" not in curso_df.columns:
@@ -325,7 +524,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             st.caption(f"Proficiência baseada em {n_ok} notas válidas.")
 
     # =========================
-    # TAB 4) ENARE
+    # TAB 6) ENARE
     # =========================
     with tab_enare:
         if "PER_ACERTO_ENARE" not in curso_df.columns:
@@ -354,90 +553,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             st.caption(f"ENARE: {n_ok}/{n_total} valores válidos.")
 
     # =========================
-    # TAB 5) PERCENTUAL DE ACERTOS (ATUALIZADO)
-    # =========================
-    with tab_acertos:
-        st.subheader("Análise Detalhada por Questão")
-        
-        candidatos_prioridade = ["DS_VT_ACE_OCE", "DS_VT_ACE_OBJ", "DS_VT_ACE_OFG"]
-        candidatos_genericos = [c for c in curso_df.columns if "DS_VT_ACE" in c]
-        
-        col_vetor = None
-        
-        todos_candidatos = []
-        for c in candidatos_prioridade:
-            if c not in todos_candidatos: 
-                todos_candidatos.append(c)
-        for c in candidatos_genericos:
-            if c not in todos_candidatos: 
-                todos_candidatos.append(c)
-        
-        for c in todos_candidatos:
-            if c in curso_df.columns:
-                temp_series = curso_df[c].astype(str).str.strip()
-                validos = temp_series[temp_series != ""].count()
-                validos_nan = curso_df[c].notna().sum()
-                if validos > 0 and validos_nan > 0:
-                    col_vetor = c
-                    break
-        
-        if col_vetor is None:
-            st.error("Não foi possível encontrar uma coluna válida com o vetor de respostas (ex: DS_VT_ACE_OCE).")
-            st.info(f"Colunas disponíveis no dataset: {list(curso_df.columns)}")
-        else:
-            
-            raw_data = curso_df[col_vetor].astype(str).replace("nan", np.nan)
-            vetores = raw_data[raw_data.str.strip() != ""].dropna()
-            
-            if vetores.empty:
-                st.warning(f"A coluna {col_vetor} existe, mas não contém dados válidos para os filtros selecionados.")
-            else:
-                tamanhos = vetores.str.len()
-                qtd_questoes = int(tamanhos.mode()[0]) if not tamanhos.empty else 0
-                
-                if qtd_questoes == 0:
-                     st.warning("Vetor de respostas com comprimento zero.")
-                else:
-                    acertos_por_questao = [0] * qtd_questoes
-                    total_alunos_vetor = 0
-                    
-                    for v in vetores:
-                        v = v.strip() 
-                        if len(v) < qtd_questoes:
-                            continue 
-                        
-                        total_alunos_vetor += 1
-                        
-                        for i in range(qtd_questoes):
-                            if v[i] == '1': 
-                                acertos_por_questao[i] += 1
-                    
-                    if total_alunos_vetor == 0:
-                         st.warning("Nenhum vetor válido encontrado após processamento.")
-                    else:
-                        labels_q = [f"Q{i+1}" for i in range(qtd_questoes)]
-                        percentuais = [(x / total_alunos_vetor) * 100 for x in acertos_por_questao]
-                        
-                        fig, ax = plt.subplots(figsize=(12, 5)) 
-                        bars = ax.bar(labels_q, percentuais, color="#2E5C8A")
-                        
-                        ax.set_ylabel("% de Acertos")
-                        ax.set_xlabel("Questão")
-                        ax.set_title(f"Percentual de Acertos por Questão \n(Total de alunos: {total_alunos_vetor})")
-                        
-                        # --- MODIFICAÇÃO: Margem superior aumentada para 115 ---
-                        ax.set_ylim(0, 115)
-                        
-                        # --- MODIFICAÇÃO: Adicionado '%%' no formato para aparecer o símbolo % ---
-                        ax.bar_label(bars, fmt="%.0f%%", padding=3, fontsize=7, rotation=90)
-                        
-                        plt.xticks(rotation=90, fontsize=8)
-                        plt.tight_layout()
-                        
-                        st.pyplot(fig)
-
-    # =========================
-    # TAB 6) PERCEPÇÃO DE PROVA
+    # TAB 7) PERCEPÇÃO DE PROVA
     # =========================
     with tab_percepcao:
         st.subheader("Questionário de Percepção sobre a Prova")
@@ -522,7 +638,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
                 st.markdown("---")
 
     # =========================
-    # TAB 7) PDF PERCEPÇÃO
+    # TAB 8) PDF PERCEPÇÃO
     # =========================
     with tab_pdf:
         st.subheader("Questionário de Percepção de Prova - Original")
