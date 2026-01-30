@@ -25,17 +25,13 @@ def create_sidebar() -> str:
     """Cria a barra de navegação lateral e retorna a página selecionada."""
     
     # --- CONTROLE DE VISIBILIDADE ---
-    # Mude para True para exibir o menu completo (ENADE antigo + Relatório)
-    # Mude para False para exibir apenas ENAMED
     MOSTRAR_TUDO = False 
     
-    # Constrói a lista de opções dinamicamente
     opcoes_menu = ["🏠 Página Inicial"]
     
     if MOSTRAR_TUDO:
         opcoes_menu.extend(["📊 Conhecimento Específico", "📝 Questionário do Estudante"])
     
-    # Itens do ENAMED (Sempre visíveis)
     opcoes_menu.extend(["🩺 ENAMED", "Questionário do Estudante Enamed"])
     
     if MOSTRAR_TUDO:
@@ -45,28 +41,31 @@ def create_sidebar() -> str:
         st.markdown("### Menu")
         page = option_menu(
             menu_title=None,
-            
-            # Passamos a lista dinâmica aqui
             options=opcoes_menu,
-            
             default_index=0,
             styles={
                 "container": {"padding": "0!important", "background-color": "transparent"},
                 "nav-link": {
                     "font-size": "17px",
-                    "color": "#FAFAFA",
+                    # AQUI ESTÁ A CORREÇÃO:
+                    # Usar var(--text-color) faz o texto virar preto no tema claro e branco no escuro
+                    "color": "var(--text-color)", 
                     "padding": "10px",
                     "border-radius": "10px",
                     "margin": "5px 0",
                     "transition": "0.2s"
                 },
                 "nav-link:hover": {
-                    "background-color": "rgba(255, 255, 255, 0.1)"
+                    # Ajuste opcional: mudei para cinza claro para aparecer em ambos os temas
+                    "background-color": "var(--background-color)", 
+                    "filter": "brightness(90%)" 
                 },
                 "nav-link-selected": {
-                    "background-color": "#FFFFFF",
+                    # Usar a cor primária do tema (geralmente vermelho/laranja do Streamlit ou a definida na config)
+                    "background-color": "var(--primary-color)",
                     "font-weight": "600",
-                    "color": "#212121"
+                    # Texto branco quando selecionado (geralmente fica bom sobre a cor primária)
+                    "color": "#FFFFFF" 
                 },
             }
         )
