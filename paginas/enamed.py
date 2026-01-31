@@ -390,7 +390,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             cad_list = sorted(cads.unique().tolist())
             cad_default = _pick_default_caderno(curso_df)
             cad_sel = st.selectbox(
-                "Selecione o Caderno (CO_CADERNO) — necessário para não misturar ordem das questões",
+                "Selecione o Caderno — necessário para não misturar ordem das questões",
                 cad_list,
                 index=cad_list.index(cad_default) if cad_default in cad_list else 0
             )
