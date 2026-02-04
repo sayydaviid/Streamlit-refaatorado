@@ -20,6 +20,93 @@ from streamlit_pdf_viewer import pdf_viewer
 _FLOAT_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
 
 # ============================================================
+# NOVA LÓGICA: MAPA DE EQUIVALÊNCIA (Caderno 1 <-> Caderno 2)
+# ============================================================
+def get_c1_to_c2_map():
+    mapping = {}
+    # Usando índices base-0 (0 a 99) para iterar as 100 questões
+    for i in range(100):
+        c1_num = i + 1  # Questão 1 a 100 (Caderno 1)
+        
+        # Lógica baseada na tabela de equivalência
+        if c1_num <= 50:
+            c2_num = c1_num + 50
+        else:
+            c2_num = 101 - c1_num
+            
+        mapping[i] = c2_num - 1 # Retorna índice base-0 correspondente em C2
+    return mapping
+
+def unify_data_to_c1(df: pd.DataFrame, suf: str) -> pd.DataFrame:
+    """
+    Normaliza as strings de ACE, ESC e GAB para a ordem do Caderno 1.
+    Se o aluno fez Caderno 2, reordena os caracteres.
+    """
+    df_out = df.copy()
+    
+    col_ace = "DS_VT_ACE" + suf
+    col_esc = "DS_VT_ESC" + suf
+    col_gab = "DS_VT_GAB" + suf
+    
+    mapping = get_c1_to_c2_map()
+    
+    # Listas para armazenar as novas colunas
+    new_ace_list = []
+    new_esc_list = []
+    new_gab_list = []
+    
+    for idx, row in df_out.iterrows():
+        caderno = row.get("CO_CADERNO")
+        
+        # Converte para string segura
+        ace = str(row[col_ace]) if pd.notna(row[col_ace]) else ""
+        esc = str(row[col_esc]) if pd.notna(row[col_esc]) else ""
+        gab = str(row[col_gab]) if pd.notna(row[col_gab]) else ""
+        
+        # Tenta converter caderno para int, se falhar ou não for 2, trata como padrão
+        try:
+            cad_val = int(caderno)
+        except:
+            cad_val = -1
+
+        # Se for C1, ou desconhecido, ou string curta demais, mantém original
+        if cad_val != 2 or len(ace) < 100:
+            new_ace_list.append(ace)
+            new_esc_list.append(esc)
+            new_gab_list.append(gab)
+            continue
+            
+        # Se for C2, aplica o reordenamento para virar "Virtual C1"
+        mapped_ace = [""] * 100
+        mapped_esc = [""] * 100
+        mapped_gab = [""] * 100
+        
+        # Para cada posição i (0..99) do Caderno 1 (Destino)
+        # Buscamos o índice j correspondente no Caderno 2 (Origem)
+        for i_c1 in range(100):
+            i_c2 = mapping.get(i_c1)
+            
+            # Proteção de bounds (caso string tenha tamanho exato 100 ou mais)
+            if i_c2 < len(ace): mapped_ace[i_c1] = ace[i_c2]
+            else: mapped_ace[i_c1] = "."
+                
+            if i_c2 < len(esc): mapped_esc[i_c1] = esc[i_c2]
+            else: mapped_esc[i_c1] = "."
+            
+            if i_c2 < len(gab): mapped_gab[i_c1] = gab[i_c2]
+            else: mapped_gab[i_c1] = "."
+        
+        new_ace_list.append("".join(mapped_ace))
+        new_esc_list.append("".join(mapped_esc))
+        new_gab_list.append("".join(mapped_gab))
+
+    df_out[col_ace] = new_ace_list
+    df_out[col_esc] = new_esc_list
+    df_out[col_gab] = new_gab_list
+    
+    return df_out
+
+# ============================================================
 # Helpers
 # ============================================================
 def to_numeric_robust(series: pd.Series) -> pd.Series:
@@ -382,19 +469,38 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
         return
 
     # ---------------------------------------------------------
-    # IMPORTANTE: filtrar por caderno
+    # IMPORTANTE: filtrar por caderno (MODIFICADO PARA INCLUIR AMBOS)
     # ---------------------------------------------------------
+    cad_sel = None
+    modo_caderno = "Unico"
+
     if "CO_CADERNO" in curso_df.columns:
         cads = pd.to_numeric(curso_df["CO_CADERNO"], errors="coerce").dropna().astype(int)
         if not cads.empty:
-            cad_list = sorted(cads.unique().tolist())
-            cad_default = _pick_default_caderno(curso_df)
-            cad_sel = st.selectbox(
+            cads_disponiveis = sorted(cads.unique().tolist())
+            
+            # Opções do dropdown
+            opcoes_caderno = [f"Caderno {c}" for c in cads_disponiveis]
+            
+            # Se tiver C1 e C2, insere "Ambos" no início (índice 0)
+            if 1 in cads_disponiveis and 2 in cads_disponiveis:
+                 opcoes_caderno.insert(0, "Ambos")
+            
+            # SelectBox com index=0 para que "Ambos" (se existir) venha selecionado
+            escolha_caderno = st.selectbox(
                 "Selecione o Caderno — necessário para não misturar ordem das questões",
-                cad_list,
-                index=cad_list.index(cad_default) if cad_default in cad_list else 0
+                opcoes_caderno,
+                index=0
             )
-            curso_df = curso_df[pd.to_numeric(curso_df["CO_CADERNO"], errors="coerce").astype("Int64") == cad_sel].copy()
+
+            if "Ambos" in escolha_caderno:
+                modo_caderno = "Ambos"
+                # Filtra apenas C1 e C2
+                curso_df = curso_df[pd.to_numeric(curso_df["CO_CADERNO"], errors="coerce").isin([1, 2])].copy()
+            else:
+                # Extrai o número do caderno da string "Caderno X"
+                cad_sel = int(escolha_caderno.split()[-1])
+                curso_df = curso_df[pd.to_numeric(curso_df["CO_CADERNO"], errors="coerce").astype("Int64") == cad_sel].copy()
 
     # ---------------------------------------------------------
     # Saneamento numérico
@@ -419,10 +525,18 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
     stats = None
 
     if suf is not None:
+        # SE MODO AMBOS, PRECISAR UNIFICAR C2 EM C1
+        if modo_caderno == "Ambos":
+            curso_df_proc = unify_data_to_c1(curso_df, suf)
+        else:
+            curso_df_proc = curso_df
+
         col_gab = "DS_VT_GAB" + suf
         col_ace = "DS_VT_ACE" + suf
         col_esc = "DS_VT_ESC" + suf
-        stats = compute_stats_ace_esc_gab(curso_df, col_ace=col_ace, col_esc=col_esc, col_gab=col_gab)
+        
+        # Usa o dataframe processado (unificado) para estatisticas
+        stats = compute_stats_ace_esc_gab(curso_df_proc, col_ace=col_ace, col_esc=col_esc, col_gab=col_gab)
 
     # ---------------------------------------------------------
     # Abas
@@ -443,6 +557,12 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
     # =========================
     with tab_acertos:
         st.subheader("Percentual de Acertos por Questão")
+        
+        # Adicionei apenas esta legenda para o usuário saber o que está vendo
+        if modo_caderno == "Ambos":
+            st.caption("Visualizando dados unificados (C1 + C2). Questões do Caderno 2 foram reordenadas para corresponder ao Caderno 1.")
+        else:
+            st.caption(f"Visualizando dados do Caderno {cad_sel}")
 
         if stats is None:
             st.error("Não foi possível calcular. Precisa de DS_VT_ACE_OBJ + DS_VT_ESC_OBJ + DS_VT_GAB_OBJ válidos.")
@@ -459,7 +579,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             bars = ax.bar(labels_q, y, color="#2E5C8A")
             ax.set_ylabel("% de Acertos")
             ax.set_xlabel("Questão (posição no caderno)")
-            ax.set_title(f"Percentual de Acertos por Questão\nNúmero de participantes do caderno {cad_sel}: {len(curso_df)}")
+            ax.set_title(f"Percentual de Acertos por Questão\nNúmero de participantes: {len(curso_df)}")
             ax.set_ylim(0, 115)
 
             # labels: mesmos nomes do submenu de alternativas
@@ -680,13 +800,90 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
 
             st.caption(f"ENARE: {n_ok}/{n_total} valores válidos.")
 
-    # =========================
-    # TAB 7) PERCEPÇÃO
+    # TAB 7) PERCEPÇÃO DE PROVA
     # =========================
     with tab_percepcao:
         st.subheader("Questionário de Percepção sobre a Prova")
-        st.info("Mantido igual ao seu código (não alterei aqui).")
+        
+        PERCEP_MAP = {
+            "CO_RS_I1": {
+                "titulo": "Q1 - Qual o grau de dificuldade das questões?",
+                "opcoes": {"A": "Muito fácil", "B": "Fácil", "C": "Médio", "D": "Difícil", "E": "Muito difícil"}
+            },
+            "CO_RS_I2": {
+                "titulo": "Q2 - Qual foi o tempo gasto para concluir a prova?",
+                "opcoes": {"A": "< 1h", "B": "1h a 2h", "C": "3h a 4h", "D": "4h a 5h", "E": "5h (não terminei)"}
+            },
+            "CO_RS_I3": {
+                "titulo": "Q3 - Em relação ao tempo total, a prova foi:",
+                "opcoes": {"A": "Muito longa", "B": "Longa", "C": "Adequada", "D": "Curta", "E": "Muito curta"}
+            },
+            "CO_RS_I4": {
+                "titulo": "Q4 - Os enunciados estavam claros e objetivos?",
+                "opcoes": {"A": "Sim, todos", "B": "Sim, a maioria", "C": "Cerca da metade", "D": "Poucos", "E": "Não, nenhum"}
+            },
+            "CO_RS_I5": {
+                "titulo": "Q5 - As instruções foram suficientes?",
+                "opcoes": {"A": "Sim, excessivas", "B": "Sim, todas", "C": "Sim, maioria", "D": "Sim, algumas", "E": "Não, nenhuma"}
+            },
+            "CO_RS_I6": {
+                "titulo": "Q6 - Dificuldade encontrada ao responder:",
+                "opcoes": {"A": "Desconhecimento", "B": "Abordagem diferente", "C": "Espaço insuficiente", "D": "Falta motivação", "E": "Sem dificuldade"}
+            },
+            "CO_RS_I7": {
+                "titulo": "Q7 - Sobre os conteúdos da prova:",
+                "opcoes": {"A": "Não estudei maioria", "B": "Estudei alguns, não aprendi", "C": "Estudei maioria, não aprendi", "D": "Estudei/Aprendi muitos", "E": "Estudei/Aprendi todos"}
+            },
+            "CO_RS_I8": {
+                "titulo": "Q8 - Avaliação da sequência das questões:",
+                "opcoes": {"A": "Não interferiu", "B": "Preferia por área", "C": "Preferia por dificuldade", "D": "Dificultou raciocínio", "E": "Facilitou organização"}
+            },
+            "CO_RS_I9": {
+                "titulo": "Q9 - Atividades práticas contribuíram para a resolução?",
+                "opcoes": {"A": "Sim", "B": "Não"}
+            }
+        }
 
+        cols_percep = [c for c in PERCEP_MAP.keys() if c in curso_df.columns]
+        if not cols_percep:
+            st.info("Dados de percepção de prova (CO_RS_I1...I9) não encontrados neste dataset.")
+        else:
+            for q_code in cols_percep:
+                meta = PERCEP_MAP[q_code]
+                counts = curso_df[q_code].value_counts().sort_index()
+                
+                labels = []
+                heights = []
+                colors = []
+                
+                possiveis = sorted(meta["opcoes"].keys())
+                for letra in possiveis:
+                    val = counts.get(letra, 0)
+                    texto = meta["opcoes"].get(letra, letra)
+                    labels.append(f"{letra}: {texto}")
+                    heights.append(val)
+
+                    if letra in ['A', 'B'] and q_code not in ['CO_RS_I1', 'CO_RS_I2', 'CO_RS_I3']: 
+                         colors.append("#2E8A5C") # Verde
+                    elif letra in ['D', 'E'] and q_code not in ['CO_RS_I1', 'CO_RS_I2', 'CO_RS_I3']:
+                         colors.append("#8A2E2E") # Vermelho
+                    else:
+                         colors.append("#2E5C8A") # Azul padrão
+                
+                st.markdown(f"#### {meta['titulo']}")
+                fig, ax = plt.subplots(figsize=(8, 3))
+                bars = ax.bar(possiveis, heights, color=colors)
+                ax.set_ylabel("Qtd. Estudantes")
+                ax.bar_label(bars, padding=3)
+                
+                if heights:
+                    ax.set_ylim(0, max(heights) * 1.3)
+                
+                caption_text = " | ".join([f"**{l}**: {t}" for l, t in meta["opcoes"].items()])
+                st.caption(caption_text)
+                st.pyplot(fig)
+                st.markdown("---")
+                
     # =========================
     # TAB 8) PDF
     # =========================
