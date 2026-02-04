@@ -773,7 +773,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
                 height=500
             )
 
-    # =========================
+   # =========================
     # TAB 3) MÉDIAS GERAIS
     # =========================
     with tab_medias:
@@ -788,8 +788,8 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             medias = curso_df[cols_media_exist].mean(numeric_only=True)
             label_map = {
                 "QT_ACERTO_AREA_1": "Clínica Médica",
-                "QT_ACERTO_AREA_2": "Cirurgia Geral",
-                "QT_ACERTO_AREA_3": "Pediatria",
+                "QT_ACERTO_AREA_2": "Pediatria",        # <--- TROCADO (Era Cirurgia Geral)
+                "QT_ACERTO_AREA_3": "Cirurgia Geral",   # <--- TROCADO (Era Pediatria)
                 "QT_ACERTO_AREA_4": "Ginecologia e Obstetrícia",
                 "QT_ACERTO_AREA_5": "Medicina da Família e Comunidade",
             }
@@ -807,8 +807,8 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
 
             df_medias.index = range(1, len(df_medias) + 1)
             st.dataframe(df_medias, use_container_width=True)
-
-    # =========================
+            
+   # =========================
     # TAB 4) DISTRIBUIÇÃO POR ÁREA
     # =========================
     with tab_area:
@@ -823,9 +823,9 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
         else:
             medias = curso_df[cols_media_exist].mean(numeric_only=True)
             NOME_AREAS = {
-                "QT_ACERTO_AREA_1": "Cirurgia Geral",
+                "QT_ACERTO_AREA_1": "Pediatria",        # <--- TROCADO (Era Cirurgia Geral)
                 "QT_ACERTO_AREA_2": "Clínica Médica",
-                "QT_ACERTO_AREA_3": "Pediatria",
+                "QT_ACERTO_AREA_3": "Cirurgia Geral",   # <--- TROCADO (Era Pediatria)
                 "QT_ACERTO_AREA_4": "Ginecologia e Obstetrícia",
                 "QT_ACERTO_AREA_5": "Medicina da Família e Comunidade"
             }
@@ -845,7 +845,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             plt.xticks(rotation=0)
             plt.tight_layout()
             st.pyplot(fig)
-
+            
     # =========================
     # TAB 5) PROFICIÊNCIA
     # =========================
