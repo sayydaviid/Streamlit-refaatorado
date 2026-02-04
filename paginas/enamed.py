@@ -860,7 +860,7 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
             else:
                 prof_series = prof.dropna()
                 prof_mean = float(prof_series.mean())
-                CORTE_OFICIAL_INEP = -0.41  # Exemplo
+                CORTE_OFICIAL_INEP = -0.40 # Exemplo
                 aprovados = prof_series[prof_series >= CORTE_OFICIAL_INEP].count()
                 taxa_aprovacao = (aprovados / len(prof_series)) * 100
 
