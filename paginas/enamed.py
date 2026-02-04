@@ -369,6 +369,9 @@ def compute_stats_ace_esc_gab(df: pd.DataFrame, col_ace: str, col_esc: str, col_
 # ============================================================
 # Página Principal
 # ============================================================
+# ============================================================
+# Página Principal (AJUSTADA COM COMPARAÇÃO)
+# ============================================================
 def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
     st.markdown("""
         <style>
@@ -427,7 +430,9 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
         st.warning("Não foi possível listar municípios.")
         return
 
-    col1, col2, col3 = st.columns(3)
+    # Layout de 4 colunas para incluir o Checkbox de comparação
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 0.8])
+    
     with col1:
         municipio = st.selectbox("Selecione o Município", municipios)
 
@@ -463,44 +468,72 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
     with col3:
         curso = st.selectbox("Selecione o Curso", cursos)
 
-    curso_df = df_mun_ies[df_mun_ies["NOME_CURSO"] == curso].copy()
-    if curso_df.empty:
+    curso_df_base = df_mun_ies[df_mun_ies["NOME_CURSO"] == curso].copy()
+    if curso_df_base.empty:
         st.warning("Sem dados para os filtros selecionados.")
         return
 
     # ---------------------------------------------------------
-    # IMPORTANTE: filtrar por caderno (MODIFICADO PARA INCLUIR AMBOS)
+    # LÓGICA DE CADERNO E COMPARAÇÃO
     # ---------------------------------------------------------
     cad_sel = None
     modo_caderno = "Unico"
-
-    if "CO_CADERNO" in curso_df.columns:
-        cads = pd.to_numeric(curso_df["CO_CADERNO"], errors="coerce").dropna().astype(int)
+    comparar = False
+    
+    # Preparando DataFrames
+    df_main = curso_df_base.copy() # O df principal que será mostrado
+    df_comp = pd.DataFrame()       # O df de comparação (se ativado)
+    
+    if "CO_CADERNO" in curso_df_base.columns:
+        # Garante numérico
+        curso_df_base["CO_CADERNO"] = pd.to_numeric(curso_df_base["CO_CADERNO"], errors="coerce")
+        cads = curso_df_base["CO_CADERNO"].dropna().astype(int)
+        
         if not cads.empty:
             cads_disponiveis = sorted(cads.unique().tolist())
-            
-            # Opções do dropdown
             opcoes_caderno = [f"Caderno {c}" for c in cads_disponiveis]
             
-            # Se tiver C1 e C2, insere "Ambos" no início (índice 0)
             if 1 in cads_disponiveis and 2 in cads_disponiveis:
                  opcoes_caderno.insert(0, "Ambos")
             
-            # SelectBox com index=0 para que "Ambos" (se existir) venha selecionado
+            with col3: # Reutiliza col3 para ficar abaixo ou substitui (mas Streamlit renderiza sequencial)
+                # Na verdade, o selectbox do caderno já estava lá, vamos manter no fluxo
+                pass 
+
             escolha_caderno = st.selectbox(
-                "Selecione o Caderno — necessário para não misturar ordem das questões",
+                "Selecione o Caderno",
                 opcoes_caderno,
                 index=0
             )
 
             if "Ambos" in escolha_caderno:
                 modo_caderno = "Ambos"
-                # Filtra apenas C1 e C2
-                curso_df = curso_df[pd.to_numeric(curso_df["CO_CADERNO"], errors="coerce").isin([1, 2])].copy()
+                df_main = curso_df_base.copy() # Mantém tudo
             else:
-                # Extrai o número do caderno da string "Caderno X"
                 cad_sel = int(escolha_caderno.split()[-1])
-                curso_df = curso_df[pd.to_numeric(curso_df["CO_CADERNO"], errors="coerce").astype("Int64") == cad_sel].copy()
+                # Filtra o principal
+                df_main = curso_df_base[curso_df_base["CO_CADERNO"] == cad_sel].copy()
+                
+                # Prepara o de comparação (o caderno oposto) se disponível
+                if cad_sel == 1:
+                    df_comp = curso_df_base[curso_df_base["CO_CADERNO"] == 2].copy()
+                elif cad_sel == 2:
+                    df_comp = curso_df_base[curso_df_base["CO_CADERNO"] == 1].copy()
+
+    # Checkbox de Comparação (Coluna 4)
+    with col4:
+        st.write("") # Espaçamento para alinhar verticalmente
+        st.write("") 
+        # Só habilita se um caderno específico foi selecionado (não "Ambos") e se existe o caderno oposto
+        pode_comparar = (modo_caderno != "Ambos") and (not df_comp.empty)
+        
+        if pode_comparar:
+            comparar = st.checkbox("Comparação", help=f"Comparar Caderno {cad_sel} com o Caderno equivalente")
+        else:
+            st.checkbox("Comparação", value=False, disabled=True, help="Selecione Caderno 1 ou 2 (e certifique-se que o outro existe) para comparar.")
+
+    # Atualiza o curso_df global para o df_main para o restante das abas
+    curso_df = df_main
 
     # ---------------------------------------------------------
     # Saneamento numérico
@@ -519,24 +552,30 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
         curso_df["PROFICIENCIA_NUM"] = to_numeric_robust(curso_df["PROFICIENCIA"])
 
     # ---------------------------------------------------------
-    # Pré-processamento correto
+    # Cálculo de Estatísticas (Principal e Comparação)
     # ---------------------------------------------------------
     suf = _pick_suffix_consistente_obj(curso_df)
     stats = None
+    stats_comp = None
 
     if suf is not None:
-        # SE MODO AMBOS, PRECISAR UNIFICAR C2 EM C1
+        # 1. Stats Principal
         if modo_caderno == "Ambos":
-            curso_df_proc = unify_data_to_c1(curso_df, suf)
+            df_proc_main = unify_data_to_c1(curso_df, suf)
         else:
-            curso_df_proc = curso_df
-
+            df_proc_main = curso_df # Se é caderno único, não unifica, usa a ordem original dele
+        
         col_gab = "DS_VT_GAB" + suf
         col_ace = "DS_VT_ACE" + suf
         col_esc = "DS_VT_ESC" + suf
         
-        # Usa o dataframe processado (unificado) para estatisticas
-        stats = compute_stats_ace_esc_gab(curso_df_proc, col_ace=col_ace, col_esc=col_esc, col_gab=col_gab)
+        stats = compute_stats_ace_esc_gab(df_proc_main, col_ace=col_ace, col_esc=col_esc, col_gab=col_gab)
+
+        # 2. Stats Comparação (Se ativado)
+        if comparar and not df_comp.empty:
+            # Calculamos as estatísticas do caderno oposto na ordem ORIGINAL dele
+            # (Não unificamos para C1, pois faremos o mapeamento visualmente no gráfico)
+            stats_comp = compute_stats_ace_esc_gab(df_comp, col_ace=col_ace, col_esc=col_esc, col_gab=col_gab)
 
     # ---------------------------------------------------------
     # Abas
@@ -553,60 +592,138 @@ def show_page(Enade, UFPA_data, COURSE_CODES, hei_dict):
     ])
 
     # =========================
-    # TAB 1) ACERTOS (ACE) — STATUS + PARTICIPANTES (TOTAL FILTRADO) + SEM DEBUG
+    # TAB 1) ACERTOS (ACE) — COM COMPARAÇÃO
+    # =========================
+    # =========================
+    # TAB 1) ACERTOS (ACE) — CORRIGIDO COM ZOOM/SLIDER
     # =========================
     with tab_acertos:
         st.subheader("Percentual de Acertos por Questão")
         
-        # Adicionei apenas esta legenda para o usuário saber o que está vendo
+        # --- CONTROLE DE VISUALIZAÇÃO (CORREÇÃO DO BUG VISUAL) ---
+        # Adicionamos um slider para o usuário escolher quantas questões ver por vez.
+        # Isso evita que 100 questões fiquem esmagadas uma em cima da outra.
+        col_r1, col_r2 = st.columns([3, 1])
+        with col_r1:
+            q_range = st.slider(
+                "Selecione o intervalo de questões para visualizar:",
+                min_value=1, max_value=stats["n"] if stats else 100, 
+                value=(1, 20), # Padrão: ver as primeiras 20
+                step=1
+            )
+        with col_r2:
+            st.write("") # Espaço
+            st.info("Ajuste o slider para dar zoom.")
+
+        start_q, end_q = q_range
+        # Índices de array (0-based)
+        idx_start = start_q - 1
+        idx_end = end_q 
+        
+        # Textos de legenda
         if modo_caderno == "Ambos":
-            st.caption("Visualizando dados unificados (C1 + C2). Questões do Caderno 2 foram reordenadas para corresponder ao Caderno 1.")
+            st.caption("Visualizando dados unificados. Questões do Caderno 2 foram reordenadas para C1.")
+        elif comparar:
+            cad_oposto = 2 if cad_sel == 1 else 1
+            st.caption(f"Comparando: Caderno {cad_sel} (Azul) vs Caderno {cad_oposto} (Laranja).")
         else:
             st.caption(f"Visualizando dados do Caderno {cad_sel}")
 
         if stats is None:
-            st.error("Não foi possível calcular. Precisa de DS_VT_ACE_OBJ + DS_VT_ESC_OBJ + DS_VT_GAB_OBJ válidos.")
-            st.info(f"Colunas disponíveis: {list(curso_df.columns)}")
+            st.error("Não foi possível calcular estatísticas.")
         else:
-            n = stats["n"]
-            labels_q = [f"Q{i+1}" for i in range(n)]
+            # Recorta os dados apenas para a faixa selecionada no slider
+            all_n = stats["n"]
+            full_x = np.arange(all_n)
+            
+            # Slice dos dados principais
+            x_slice = full_x[idx_start:idx_end]
+            y_main_full = np.nan_to_num(stats["perc_correct"], nan=0.0)
+            y_main_slice = y_main_full[idx_start:idx_end]
+            status_slice = stats["status_item"][idx_start:idx_end]
+            
+            # Configuração do Gráfico
+            fig, ax = plt.subplots(figsize=(12, 6))
 
-            y_raw = stats["perc_correct"]
-            y = np.nan_to_num(y_raw, nan=0.0)
+            if not comparar:
+                # --- PLOTAGEM SIMPLES (COM ZOOM) ---
+                bars = ax.bar(x_slice, y_main_slice, color="#2E5C8A", width=0.8)
+                
+                # Labels do eixo X
+                ax.set_xticks(x_slice)
+                ax.set_xticklabels([f"Q{i+1}" for i in x_slice], rotation=0, fontsize=10)
+                
+                # Rótulos em cima das barras
+                for i, b in enumerate(bars):
+                    status = status_slice[i] if i < len(status_slice) else "OK"
+                    if status == "ANULADA": label = "Anul"
+                    elif status == "EXCLUIDA": label = "Excl"
+                    else: label = f"{y_main_slice[i]:.0f}%"
+                    
+                    ax.text(b.get_x() + b.get_width()/2, b.get_height() + 1, label, 
+                            ha="center", va="bottom", fontsize=9)
+            
+            else:
+                # --- PLOTAGEM COM COMPARAÇÃO (COM ZOOM) ---
+                y_comp_mapped_full = np.zeros(all_n)
+                labels_comp_full = [""] * all_n
+                
+                mapping = get_c1_to_c2_map()
+                
+                # Lógica de mapeamento (igual a anterior, mas aplicada ao array full antes do slice)
+                if stats_comp is not None:
+                    if cad_sel == 1:
+                        for i in range(all_n):
+                            idx_c2 = mapping.get(i)
+                            if idx_c2 is not None and idx_c2 < len(stats_comp["perc_correct"]):
+                                y_comp_mapped_full[i] = stats_comp["perc_correct"][idx_c2]
+                                labels_comp_full[i] = f"Q{idx_c2 + 1}"
+                    elif cad_sel == 2:
+                        mapping_inv = {v: k for k, v in mapping.items()}
+                        for i in range(all_n):
+                            idx_c1 = mapping_inv.get(i)
+                            if idx_c1 is not None and idx_c1 < len(stats_comp["perc_correct"]):
+                                y_comp_mapped_full[i] = stats_comp["perc_correct"][idx_c1]
+                                labels_comp_full[i] = f"Q{idx_c1 + 1}"
 
+                # Aplica o slice nos dados de comparação
+                y_comp_slice = y_comp_mapped_full[idx_start:idx_end]
+                y_comp_slice = np.nan_to_num(y_comp_slice, nan=0.0)
+                labels_comp_slice = labels_comp_full[idx_start:idx_end]
 
-            fig, ax = plt.subplots(figsize=(12, 5))
-            bars = ax.bar(labels_q, y, color="#2E5C8A")
+                # Plot Grouped Bars
+                width = 0.4
+                rects1 = ax.bar(x_slice - width/2, y_main_slice, width, label=f'Caderno {cad_sel}', color="#2E5C8A")
+                rects2 = ax.bar(x_slice + width/2, y_comp_slice, width, label=f'Caderno {cad_oposto}', color="#FF8C00")
+
+                # Labels Eixo X (Composto)
+                x_labels_combined = []
+                for k, idx_absoluto in enumerate(x_slice):
+                    q_main = f"Q{idx_absoluto+1}"
+                    q_other = labels_comp_slice[k]
+                    # Quebra de linha para não ficar largo
+                    x_labels_combined.append(f"{q_main}\n({q_other})")
+                
+                ax.set_xticks(x_slice)
+                ax.set_xticklabels(x_labels_combined, rotation=0, fontsize=9)
+                ax.legend()
+                
+                # Valores em cima das barras (apenas se tiver poucas barras para não poluir)
+                if (idx_end - idx_start) <= 25:
+                    ax.bar_label(rects1, fmt='%.0f', padding=2, fontsize=8)
+                    ax.bar_label(rects2, fmt='%.0f', padding=2, fontsize=8)
+
             ax.set_ylabel("% de Acertos")
-            ax.set_xlabel("Questão (posição no caderno)")
-            ax.set_title(f"Percentual de Acertos por Questão\nNúmero de participantes: {len(curso_df)}")
+            ax.set_xlabel("Questão")
+            ax.set_title(f"Desempenho por Item (Questões {start_q} a {end_q})")
             ax.set_ylim(0, 115)
-
-            # labels: mesmos nomes do submenu de alternativas
-            for i, b in enumerate(bars):
-                status = stats["status_item"][i] if i < len(stats["status_item"]) else "OK"
-
-                if status == "ANULADA":
-                    label = "Anulada"
-                elif status == "EXCLUIDA":
-                    label = "Excluída"
-                else:
-                    label = f"{y[i]:.1f}%"
-
-                ax.text(
-                    b.get_x() + b.get_width() / 2,
-                    b.get_height() + 2,
-                    label,
-                    ha="center", va="bottom",
-                    rotation=90, fontsize=7
-                )
-
-            plt.xticks(rotation=90, fontsize=8)
+            ax.grid(axis='y', linestyle='--', alpha=0.3)
+            
             plt.tight_layout()
             st.pyplot(fig)
-
+            
     # =========================
-    # TAB 2) ALTERNATIVAS (ESC) + GABARITO/STATUS — SEM DEBUG
+    # TAB 2) ALTERNATIVAS (ESC)
     # =========================
     with tab_alternativas:
         st.subheader("Percentual de Marcação por Alternativa")
